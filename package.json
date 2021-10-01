@@ -1,0 +1,31 @@
+{
+  "name": "table-buddy",
+  "version": "1.0.0",
+  "description": "Finally, what the world needs! Another table component! This one's plain JavaScript, based on Web Components, with no additional dependencies.",
+  "main": "backend/index.js",
+  "scripts": {
+    "test": "mocha",
+    "start": "node backend/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dulce-Engineering/table-buddy.git"
+  },
+  "keywords": [
+    "web",
+    "component",
+    "table",
+    "javascript"
+  ],
+  "author": "Dulce Engineering",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Dulce-Engineering/table-buddy/issues"
+  },
+  "homepage": "https://github.com/Dulce-Engineering/table-buddy#readme",
+  "dependencies": {
+    "db-buddy": "^1.0.0",
+    "express": "^4.17.1",
+    "rpc-buddy": "^1.2.1"
+  }
+}

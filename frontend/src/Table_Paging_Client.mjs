@@ -1,13 +1,13 @@
-import Utils from "../../Utils.mjs";
+import Utils from "./Utils.mjs";
 import Table_Buddy from "./Table_Buddy.mjs";
 
-class Table_New extends Table_Buddy 
+class Table_Paging_Client extends Table_Buddy 
 {  
   constructor() 
   {
     super();
 
-    this.pageSize = Utils.getFromLocalStorgeInt(this.getStorageKeyPrefix() + ".pageSize", 10);
+    this.pageSize = 10; // Utils.getFromLocalStorgeInt(this.getStorageKeyPrefix() + ".pageSize", 10);
     this.currPage = 0;
     this.pageCount = 0;
     this.itemCount = 0;
@@ -92,4 +92,4 @@ class Table_New extends Table_Buddy
   }
 }
 
-export default Table_New;
+export default Table_Paging_Client;

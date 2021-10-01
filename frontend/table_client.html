@@ -1,0 +1,139 @@
+<html>
+  <head>
+    <style>
+      body
+      {
+        font-family: sans-serif;
+        font-size: 14px;
+      }
+      header
+      {
+        font-size: 18px;
+        font-weight: bold;
+        padding: 10px;
+        margin: 5px;
+      }
+      section
+      {
+        background-color: lightgrey;
+        padding: 10px;
+        margin: 5px;
+      }
+      label
+      {
+        font-weight: bold;
+        margin-left: 10px;
+      }
+      table
+      {
+        width: 100%;
+      }
+      tr
+      {
+        background-color: white;
+      }
+      td,th
+      {
+        padding: 6px;
+      }
+    </style>
+    <script type="module">
+      import Sales_Customers from "/rpc-client?class=Sales_Customers";
+      import Table_Paging_Client from "./src/Table_Paging_Client.mjs";
+      import Utils from "./src/Utils.mjs";
+
+      class Customer_Table extends Table_Paging_Client
+      {
+        getColumns()
+        {
+          return [{title: "Name"}, {title: "Contact", renderAs: "html"}, {title: "Address"}];
+        }
+
+        async getRows()
+        {
+          return Sales_Customers.Get_All_Ids();
+        }
+
+        getRowData(id)
+        {
+          return Sales_Customers.Get_By_Id(id);
+        }
+
+        getCellData(colIdx, customer, rowElem)
+        {
+          let res = "";
+
+          switch(colIdx)
+          {
+            case 0: // Name
+              res = Utils.appendStr(customer.first_name, customer.last_name, " ");
+              break;
+
+            case 1: // Contact
+              res = Utils.appendStr("Phone: " + customer.phone, "Email: " + customer.email, "<br>");
+              break;
+
+            case 2: // Address
+              res = Utils.appendStr(res, customer.street, ", ");
+              res = Utils.appendStr(res, customer.city, ", ");
+              res = Utils.appendStr(res, customer.state, ", ");
+              res = Utils.appendStr(res, customer.zip_code, ", ");
+              break;
+          }
+
+          return res;
+        }
+      }
+      customElements.define('customer-table', Customer_Table);
+
+      window.onload = main;
+      function main()
+      {
+        document.getElementById("first_btn").addEventListener("click", On_Click_first_btn);
+        document.getElementById("last_btn").addEventListener("click", On_Click_last_btn);
+        document.getElementById("prev_btn").addEventListener("click", On_Click_prev_btn);
+        document.getElementById("next_btn").addEventListener("click", On_Click_next_btn);
+        document.getElementById("table").addEventListener("update", On_Update_table);
+      }
+
+      function On_Click_first_btn()
+      {
+        document.getElementById("table").gotoFirstPage();
+      }
+
+      function On_Click_last_btn()
+      {
+        document.getElementById("table").gotoLastPage();
+      }
+
+      function On_Click_prev_btn()
+      {
+        document.getElementById("table").gotoPrevPage();
+      }
+
+      function On_Click_next_btn()
+      {
+        document.getElementById("table").gotoNextPage();
+      }
+
+      function On_Update_table()
+      {
+        const text = 
+          "Page " + (this.currPage +1) + " of " + this.pageCount + ", " + this.itemCount + " items";
+
+        document.getElementById("paging").innerText = text;
+      }
+    </script>
+  </head>
+  <body>
+    <section>
+      <h1>API table with client-side paging</h1>
+      <button id="first_btn">First Page</button>
+      <button id="prev_btn">Previous Page</button>
+      <button id="next_btn">Next Page</button>
+      <button id="last_btn">Last Page</button>
+      <label id="paging"></label>
+      <customer-table id="table"></customer-table>
+    </section>
+  </body>
+</html>

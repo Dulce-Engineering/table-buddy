@@ -1,4 +1,4 @@
-import Utils from "../../Utils.mjs";
+import Utils from "../../2Utils.mjs";
 
 class Paging_Bar extends HTMLElement 
 {

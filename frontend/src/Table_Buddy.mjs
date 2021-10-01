@@ -1,11 +1,10 @@
-import Utils from "../../Utils.mjs";
+import Utils from "./Utils.mjs";
 
 class Table_Buddy extends HTMLElement 
 {
   constructor() 
   {
     super();
-    //console.log("Table_Buddy.constructor()");
 
     this.rows = null;
 
@@ -61,13 +60,12 @@ class Table_Buddy extends HTMLElement
 
   connectedCallback()
   {
-    //console.log("Table_Buddy.connectedCallback()");
     const columns = this.getColumns();
 
     this.renderHeaderColumns(columns);
     this.renderFooterCells(this.footerRowElem);
 
-    this.updateRender();
+    this.updateRender(false, true);
   }
 
   disconnectedCallback()
@@ -120,13 +118,22 @@ class Table_Buddy extends HTMLElement
     overlayElem.style.display = "none";
   }
 
+  async filterOrSort()
+  {
+
+  }
+  
   // Rendering ====================================================================================
 
-  async updateRender(skipGetRows)
+  async updateRender(skipGetRows, isFilterSort)
   {
     const columns = this.getColumns();
 
     this.showFetching();
+    if (isFilterSort)
+    {
+      await this.filterOrSort();
+    }
     if (!skipGetRows)
     {
       this.rows = await this.getRows();

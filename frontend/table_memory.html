@@ -106,28 +106,28 @@
 
       function On_Click_first_btn()
       {
-        table.gotoFirstPage();
+        table.Goto_First_Page();
       }
 
       function On_Click_last_btn()
       {
-        table.gotoLastPage();
+        table.Goto_Last_Page();
       }
 
       function On_Click_prev_btn()
       {
-        table.gotoPrevPage();
+        table.Goto_Prev_Page();
       }
 
       function On_Click_next_btn()
       {
-        table.gotoNextPage();
+        table.Goto_Next_Page();
       }
 
       function On_Update_table()
       {
         const text = 
-          "Page " + (this.currPage +1) + " of " + this.pageCount + ", " + this.itemCount + " items";
+          "Page " + (this.curr_page +1) + " of " + this.page_count + ", " + this.item_count + " items";
 
         document.getElementById("paging").innerText = text;
       }

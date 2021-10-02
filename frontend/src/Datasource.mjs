@@ -1,3 +1,5 @@
+import Utils from "./Utils.mjs";
+
 class Datasource
 {
   // return column definitions
@@ -44,12 +46,22 @@ class Client_Paging extends Datasource
 {
   Get_Data_Length(filter_by, sort_by)
   {
-    return this.data.length;
+    let res = 0;
+    if (!Utils.isEmpty(this.data))
+    {
+      res = this.data.length;
+    }
+    return res;
   }
 
   Get_Page_Data(filter_by, sort_by, limit, offset)
   {
-    return this.data.slice(offset, offset+limit);
+    let res;
+    if (!Utils.isEmpty(this.data))
+    {
+      res = this.data.slice(offset, offset+limit);
+    }
+    return res;
   }
 }
 Datasource.Client_Paging = Client_Paging;
@@ -58,12 +70,22 @@ class Memory
 {
   Get_Data_Length(filter_by, sort_by)
   {
-    return this.data.length;
+    let res = 0;
+    if (!Utils.isEmpty(this.data))
+    {
+      res = this.data.length;
+    }
+    return res;
   }
 
   Get_Page_Data(filter_by, sort_by, limit, offset)
   {
-    return this.data.slice(offset, offset+limit);
+    let res;
+    if (!Utils.isEmpty(this.data))
+    {
+      res = this.data.slice(offset, offset+limit);
+    }
+    return res;
   }
 
   Get_Row_Data(row_data)

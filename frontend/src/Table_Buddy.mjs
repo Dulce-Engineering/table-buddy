@@ -8,19 +8,19 @@ class Table_Buddy extends HTMLElement
 
     this.ds = null;
     this.rows = null;
-    this.orderByCode = null;
+    this.order_by_code = null;
     this.filters = null;
-    this.pageSize = 10;
-    this.pageStart = 0;
-    this.currPage = 0;
-    this.pageCount = 0;
-    this.itemCount = 0;
+    this.page_size = 10;
+    this.page_start = 0;
+    this.curr_page = 0;
+    this.page_count = 0;
+    this.item_count = 0;
+    this.show_busy = false;
 
-    //this.setPageSize = this.setPageSize.bind(this);
-    this.gotoPrevPage = this.gotoPrevPage.bind(this);
-    this.gotoFirstPage = this.gotoFirstPage.bind(this);
-    this.gotoLastPage = this.gotoLastPage.bind(this);
-    this.gotoNextPage = this.gotoNextPage.bind(this);
+    this.Goto_Prev_Page = this.Goto_Prev_Page.bind(this);
+    this.Goto_First_Page = this.Goto_First_Page.bind(this);
+    this.Goto_Last_Page = this.Goto_Last_Page.bind(this);
+    this.Goto_Next_Page = this.Goto_Next_Page.bind(this);
 
     this.attachShadow({mode: 'open'});
     this.updateEvent = new Event("update");
@@ -28,7 +28,7 @@ class Table_Buddy extends HTMLElement
 
   connectedCallback()
   {
-    const rootElem = this.render();
+    const rootElem = this.Render();
     this.shadowRoot.append(rootElem);
   }
 
@@ -50,77 +50,75 @@ class Table_Buddy extends HTMLElement
       this.style_src = newValue;
     }
   }
-
-  removeChildren(elem)
-  {
-    while (elem.firstChild) 
-    {
-      elem.removeChild(elem.lastChild);
-    }
-  }
   
   set datasource(ds)
   {
     this.ds = ds;
 
     const columns = this.ds.Get_Columns();
-    this.renderHeaderColumns(columns);
-    this.renderFooterCells(this.footerRowElem);
+    this.Render_Header_Columns(columns);
+    this.Render_Footer_Cells(this.footerRowElem);
 
-    this.updateRender();
+    this.Update_Render();
   }
 
   // Rendering ====================================================================================
 
-  showBusy()
+  Show_Busy()
   {
-    const overlayElem = this.shadowRoot.getElementById("tableOverlay");
-    overlayElem.style.display = "flex";
+    if (this.show_busy)
+    {
+      const overlayElem = this.shadowRoot.getElementById("tableOverlay");
+      overlayElem.style.display = "flex";
+    }
   }
 
-  hideBusy()
+  Hide_Busy()
   {
-    const overlayElem = this.shadowRoot.getElementById("tableOverlay");
-    overlayElem.style.display = "none";
+    if (this.show_busy)
+    {
+      const overlayElem = this.shadowRoot.getElementById("tableOverlay");
+      overlayElem.style.display = "none";
+    }
   }
 
-  async updateRender(is_page_update)
+  async Update_Render(is_page_update)
   {
     if (this.ds)
     {
-      this.showBusy();
+      this.Show_Busy();
       const columns = this.ds.Get_Columns();
 
       if (!is_page_update)
       {
-        await this.ds.Update_Data(this.filters, this.orderByCode);
-        this.itemCount = await this.ds.Get_Data_Length(this.filters, this.orderByCode);
+        await this.ds.Update_Data(this.filters, this.order_by_code);
+        this.item_count = await this.ds.Get_Data_Length(this.filters, this.order_by_code);
       }
-      this.pageCount = Math.ceil(this.itemCount/this.pageSize);
-      this.rows = await this.ds.Get_Page_Data(this.filters, this.orderByCode, this.pageSize, this.pageStart);
+      this.page_count = Math.ceil(this.item_count/this.page_size);
+      this.rows = await this.ds.Get_Page_Data(this.filters, this.order_by_code, this.page_size, this.page_start);
 
-      this.updateRenderHeaderColumns(columns);
-      await this.updateRenderBodyRows(columns, this.rows);
+      this.Update_Render_Header_Columns(columns);
+      await this.Update_Render_Body_Rows(columns, this.rows);
 
       this.dispatchEvent(this.updateEvent);
-      this.hideBusy();
+      this.Hide_Busy();
     }
   }
 
-  updateRenderHeaderColumns(columns)
+  Update_Render_Header_Columns(columns)
   {
     for (let i = 0; i < columns.length; i++)
     {
       const column = columns[i];
-      this.updateRenderHeaderCell(column, i);
+      this.Update_Render_Header_Cell(column, i);
     }
   }
 
-  updateRenderHeaderCell(column, idx)
+  Update_Render_Header_Cell(column, idx)
   {
   }
 
-  render()
+  Render()
   {
     let style = "";
     if (this.style_src)
@@ -197,68 +195,68 @@ class Table_Buddy extends HTMLElement
     return tableElem;
   }
 
-  renderHeaderColumns(columns)
+  Render_Header_Columns(columns)
   {
-    this.removeChildren(this.headerRowElem);
+    this.headerRowElem.replaceChildren();
     for (let i = 0; i < columns.length; i++)
     {
       const column = columns[i];
-      const cellElem = this.renderHeaderCell(column, i);
+      const cellElem = this.Render_Header_Cell(column, i);
       this.headerRowElem.append(cellElem);
     }
   }
 
-  renderHeaderCell(column, idx)
+  Render_Header_Cell(column, idx)
   {
     const titleElem = document.createElement("th");
     titleElem.style.width = column.width;
-    this.renderAsType(column.renderAs, titleElem, column.title);
+    this.Render_As_Type(column.renderAs, titleElem, column.title);
     titleElem.id = "title_" + idx;
 
     return titleElem;
   }
 
-  async updateRenderBodyRows(columns, rows)
+  async Update_Render_Body_Rows(columns, rows)
   {
     rows = await rows;
-    this.removeChildren(this.bodyElem);
+    this.bodyElem.replaceChildren();
     if (rows)
     {
       for (const row of rows)
       {
         const rowData = await this.ds.Get_Row_Data(row);
-        const rowElem = this.renderRow(columns, rowData);
+        const rowElem = this.Render_Row(columns, rowData);
         this.bodyElem.append(rowElem);
       }
     }
   }
 
-  renderRow(columns, rowData)
+  Render_Row(columns, rowData)
   {
     const rowElem = document.createElement("tr");
     for (let colIdx = 0; colIdx < columns.length; colIdx++)
     {
       const cellData = this.ds.Get_Cell_Data(colIdx, rowData, rowElem);
-      const cellElem = this.renderCell(columns[colIdx], cellData);
+      const cellElem = this.Render_Cell(columns[colIdx], cellData);
       rowElem.append(cellElem);
     }
 
     return rowElem;
   }
 
-  renderCell(column, cellData)
+  Render_Cell(column, cellData)
   {
     const cellElem = document.createElement("td");
-    this.renderAsType(column.renderAs, cellElem, cellData);
+    this.Render_As_Type(column.renderAs, cellElem, cellData);
 
     return cellElem;
   }
 
-  renderFooterCells(parentElem)
+  Render_Footer_Cells(parentElem)
   {
   }
 
-  renderAsType(type, dstElem, data)
+  Render_As_Type(type, dstElem, data)
   {
     if (type == "text")
     {
@@ -283,17 +281,17 @@ class Table_Buddy extends HTMLElement
 
   // Filter and Sort ==============================================================================
 
-  set order_by(orderByCode)
+  set order_by(order_by_code)
   {
-    this.orderByCode = orderByCode;
-    this.currPage = 0;
-    this.updateRender(false);
+    this.order_by_code = order_by_code;
+    this.curr_page = 0;
+    this.Update_Render(false);
   }
 
   set where(filters)
   {
     this.filters = filters;
-    this.currPage = 0;
+    this.curr_page = 0;
     this.Update_Paging(false);
   }
 
@@ -301,8 +299,8 @@ class Table_Buddy extends HTMLElement
 
   Update_Paging(is_page_update)
   {
-    this.pageStart = this.currPage * this.pageSize;
-    this.updateRender(is_page_update);
+    this.page_start = this.curr_page * this.page_size;
+    this.Update_Render(is_page_update);
   }
 
   Set_Page_Size(page_size)
@@ -310,8 +308,8 @@ class Table_Buddy extends HTMLElement
     page_size = parseInt(page_size);
     if (page_size > 0)
     {
-      this.currPage = 0;
-      this.pageSize = page_size;
+      this.curr_page = 0;
+      this.page_size = page_size;
       this.Update_Paging(true);
     }
   }
@@ -319,39 +317,39 @@ class Table_Buddy extends HTMLElement
   Goto_Page(page_no)
   {
     page_no = parseInt(page_no);
-    if (page_no >= 0 && page_no < this.pageCount)
+    if (page_no >= 0 && page_no < this.page_count)
     {
-      this.currPage = page_no;
+      this.curr_page = page_no;
       this.Update_Paging(true);
     }
   }
 
-  gotoPrevPage()
+  Goto_Prev_Page()
   {
-    if (this.currPage > 0)
+    if (this.curr_page > 0)
     {
-      this.currPage--;
+      this.curr_page--;
       this.Update_Paging(true);
     }
   }
 
-  gotoFirstPage()
+  Goto_First_Page()
   {
-    this.currPage = 0;
+    this.curr_page = 0;
     this.Update_Paging(true);
   }
   
-  gotoLastPage()
+  Goto_Last_Page()
   {
-    this.currPage = this.pageCount - 1;
+    this.curr_page = this.page_count - 1;
     this.Update_Paging(true);
   }
   
-  gotoNextPage()
+  Goto_Next_Page()
   {
-    if (this.currPage < this.pageCount - 1)
+    if (this.curr_page < this.page_count - 1)
     {
-      this.currPage++;
+      this.curr_page++;
       this.Update_Paging(true);
     }
   }

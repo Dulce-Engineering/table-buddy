@@ -1,0 +1,23 @@
+table
+{
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #000;
+  border-spacing: 0;
+  font-size: 12px;
+  width: 100%;
+}
+th
+{
+  border-bottom: 1px solid #eee;
+  text-transform: none;
+  font-weight: 700;
+  padding: 8px;
+  background: #eee;
+  text-align: left;
+}
+td
+{
+  padding: 8px;
+  border-top: 1px solid #eee;
+}

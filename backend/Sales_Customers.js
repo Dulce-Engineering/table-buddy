@@ -2,20 +2,65 @@ class Sales_Customers
 {
   static table = "sales_customers";
 
-  static Count_All(db)
+  static Get_Query(filter_by, sort_by)
   {
-    return db.Select_Value("select count(*) from sales_customers");
+    let where = "", order_by = "", params = [];
+    if (filter_by)
+    {
+      where = "where (first_name || ' ' || last_name || ' ' || email) like ?";
+      params.push("%" + filter_by + "%");
+    }
+    if (sort_by)
+    {
+      switch (sort_by)
+      {
+        case "FIRSTNAME_ASC": order_by = "order by first_name asc"; break;
+        case "FIRSTNAME_DSC": order_by = "order by first_name desc"; break;
+        case "LASTNAME_ASC": order_by = "order by last_name asc"; break;
+        case "LASTNAME_DSC": order_by = "order by last_name desc"; break;
+      }
+    }
+
+    return {where, order_by, params};
   }
 
-  static Get_All(db, limit, offset)
+  static Count_All(db, filter_by)
   {
-    return db.Select_Objs
-      (Sales_Customers, "select * from sales_customers limit ? offset ?", [limit, offset]);
+    const query = Sales_Customers.Get_Query(filter_by);
+    query.sql = "select count(*) from sales_customers " + query.where;
+    
+    return db.Select_Value(query.sql, query.params);
   }
 
-  static Get_All_Ids(db)
+  static Get_All(db, filter_by, sort_by, limit, offset)
   {
-    return db.Select_Values("select customer_id from sales_customers");
+    const query = Sales_Customers.Get_Query(filter_by, sort_by);
+    query.sql = 
+      "select * from sales_customers " + 
+      query.where + " " + 
+      query.order_by;
+    if (limit)
+    {
+      query.sql += " limit ?";
+      query.params.push(limit);
+    }
+    if (offset)
+    {
+      query.sql += " offset ?";
+      query.params.push(offset);
+    }
+
+    return db.Select_Objs(Sales_Customers, query.sql, query.params);
+  }
+
+  static Get_All_Ids(db, filter_by, sort_by)
+  {
+    const query = Sales_Customers.Get_Query(filter_by, sort_by);
+    query.sql = 
+      "select customer_id from sales_customers " + 
+      query.where + " " + 
+      query.order_by;
+    return db.Select_Values(query.sql, query.params);
   }
 
   static Get_By_Id(db, id)

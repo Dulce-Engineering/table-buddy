@@ -5,67 +5,51 @@
       {
         font-family: sans-serif;
         font-size: 14px;
-      }
-      header
-      {
-        font-size: 18px;
-        font-weight: bold;
-        padding: 10px;
-        margin: 5px;
+        padding: 0;
+        margin: 10px;
       }
       section
       {
-        background-color: lightgrey;
+        background-color: #eee;
         padding: 10px;
-        margin: 5px;
+        margin-bottom: 5px;
       }
       label
       {
         font-weight: bold;
         margin-left: 10px;
       }
-      table
-      {
-        width: 100%;
-      }
-      tr
-      {
-        background-color: white;
-      }
-      td,th
-      {
-        padding: 6px;
-      }
     </style>
     <script type="module">
       import Sales_Customers from "/rpc-client?class=Sales_Customers";
-      import Table_Paging_Server from "./src/Table_Paging_Server.mjs";
+      import Table_Buddy from "./src/Table_Buddy.mjs";
+      import Datasource from "./src/Datasource.mjs";
       import Utils from "./src/Utils.mjs";
 
-      class Customer_Table extends Table_Paging_Server
+      customElements.define('table-buddy', Table_Buddy);
+
+      class Customer_Ds extends Datasource.Server_Paging
       {
-        getColumns()
+        Get_Columns()
         {
           return [{title: "Name"}, {title: "Contact", renderAs: "html"}, {title: "Address"}];
         }
 
-        async filterOrSort()
+        Get_Data_Length(filter_by)
         {
-          this.itemCount = await Sales_Customers.Count_All();
+          return Sales_Customers.Count_All(filter_by);
         }
 
-        async getRows()
+        Get_Page_Data(filter_by, sort_by, limit, offset)
         {
-          const limit = this.pageSize;
-          const offset = this.currPage * this.pageSize;
-          return Sales_Customers.Get_All(limit, offset);
+          return Sales_Customers.Get_All(filter_by, sort_by, limit, offset);
         }
-
-        getCellData(colIdx, customer, rowElem)
+        
+        Get_Cell_Data(col_id, customer)
         {
           let res = "";
 
-          switch(colIdx)
+          switch(col_id)
           {
             case 0: // Name
               res = Utils.appendStr(customer.first_name, customer.last_name, " ");
@@ -86,36 +70,63 @@
           return res;
         }
       }
-      customElements.define('customer-table', Customer_Table);
 
+      let table;
       window.onload = main;
       function main()
       {
+        document.getElementById("search_input").addEventListener("change", On_Change_search_input);
+        document.getElementById("sort_sel").addEventListener("change", On_Change_sort_sel);
         document.getElementById("first_btn").addEventListener("click", On_Click_first_btn);
         document.getElementById("last_btn").addEventListener("click", On_Click_last_btn);
         document.getElementById("prev_btn").addEventListener("click", On_Click_prev_btn);
         document.getElementById("next_btn").addEventListener("click", On_Click_next_btn);
-        document.getElementById("table").addEventListener("update", On_Update_table);
+        document.getElementById("page_input").addEventListener("change", On_Change_page_input);
+        document.getElementById("size_sel").addEventListener("change", On_Change_size_sel);
+
+        table = document.getElementById("table");
+        table.addEventListener("update", On_Update_table);
+        table.datasource = new Customer_Ds();
+      }
+
+      function On_Change_search_input(event)
+      {
+        table.where = event.target.value;
+      }
+
+      function On_Change_sort_sel(event)
+      {
+        table.order_by = event.target.value;
+      }
+
+      function On_Change_page_input()
+      {
+        table.Goto_Page(parseInt(event.target.value) - 1);
+      }
+
+      function On_Change_size_sel(event)
+      {
+        table.Set_Page_Size(event.target.value);
       }
 
       function On_Click_first_btn()
       {
-        document.getElementById("table").gotoFirstPage();
+        table.gotoFirstPage();
       }
 
       function On_Click_last_btn()
       {
-        document.getElementById("table").gotoLastPage();
+        table.gotoLastPage();
       }
 
       function On_Click_prev_btn()
       {
-        document.getElementById("table").gotoPrevPage();
+        table.gotoPrevPage();
       }
 
       function On_Click_next_btn()
       {
-        document.getElementById("table").gotoNextPage();
+        table.gotoNextPage();
       }
 
       function On_Update_table()
@@ -127,15 +138,38 @@
       }
     </script>
   </head>
+
   <body>
+    <h1>API table with server-side paging</h1>
+
     <section>
-      <h1>API table with server-side paging</h1>
+      Search <input id="search_input" type="text">
+    </section>
+
+    <section>
+      Sort By <select id="sort_sel">
+        <option>None</option>
+        <option value="FIRSTNAME_ASC">First Name Asc.</option>
+        <option value="FIRSTNAME_DSC">First Name Desc.</option>
+        <option value="LASTNAME_ASC">Last Name Asc.</option>
+        <option value="LASTNAME_DSC">Last Name Desc.</option>
+      </select>
+    </section>
+
+    <section>
       <button id="first_btn">First Page</button>
       <button id="prev_btn">Previous Page</button>
       <button id="next_btn">Next Page</button>
       <button id="last_btn">Last Page</button>
+      Go To Page <input id="page_input" type="number" style="width:50px;">
+      Page Size <select id="size_sel">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+      </select>
       <label id="paging"></label>
-      <customer-table id="table"></customer-table>
     </section>
+
+    <table-buddy id="table" style-src="sample_styles.css"></table-buddy>
   </body>
 </html>

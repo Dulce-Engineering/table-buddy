@@ -19,22 +19,9 @@
         padding: 10px;
         margin: 5px;
       }
-      label
+      li
       {
-        font-weight: bold;
-        margin-left: 10px;
-      }
-      table
-      {
-        width: 100%;
-      }
-      tr
-      {
-        background-color: white;
-      }
-      td,th
-      {
-        padding: 6px;
+        margin-bottom: 20px;
       }
     </style>
   </head>
@@ -43,10 +30,29 @@
 
     <section>
       <ul>
-        <li><a href="table_memory.html">Table from in-memory data</a></li>
-        <li><a href="table_server.html">Table from backend data with server-side paging</a></li>
-        <li><a href="table_client.html">Table from backend data with client-side paging</a></li>
-        <li><a href="table_full.html">Table from backend data with client-side paging and integrated with paging and Filter Buddy component</a></li>
+        <li>
+          <a href="table_server.html">Table from backend data with server-side paging</a><br>
+          Demonstrates use of Table Buddy via 2-stage backend API calls with in-page
+          rendering of sorting, filtering, and paging controls.
+        </li>
+        <li>
+          <a href="table_client.html">Table from backend data with client-side paging</a><br>
+          Demonstrates use of Table Buddy via alternative 2-stage backend API calls whereby
+          paging is handled client-side. Rendering of sorting, filtering, and paging controls
+          is handled by in-page code.
+        </li>
+        <li>
+          <a href="table_memory.html">Table from single backend data call</a><br>
+          Demonstrates use of Table Buddy via single backend API call that returns all data. 
+          Rendering of sorting, filtering, and paging controls is handled by in-page code.
+        </li>
+        <li>
+          <a href="table_full.html">Table from backend data with Filter Buddy component</a><br>
+          Demonstrates use of Table Buddy via 2-stage backend API calls whereby paging is handled 
+          client-side. Rendering of sorting is handled by in-page code. Rendering of filtering
+          is handled by Filter Buddy and rendering of paging controls is handled by a sampl
+          Web Component.
+        </li>
       </ul>
     </section>
   </body>

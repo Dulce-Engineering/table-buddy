@@ -17,6 +17,8 @@ class Table_Buddy extends HTMLElement
     this.item_count = 0;
     this.show_busy = false;
 
+    this.Set_Page_Size = this.Set_Page_Size.bind(this);
+    this.Goto_Page = this.Goto_Page.bind(this);
     this.Goto_Prev_Page = this.Goto_Prev_Page.bind(this);
     this.Goto_First_Page = this.Goto_First_Page.bind(this);
     this.Goto_Last_Page = this.Goto_Last_Page.bind(this);

@@ -1,4 +1,4 @@
-import Utils from "../../2Utils.mjs";
+import Utils from "./Utils.mjs";
 
 class Paging_Bar extends HTMLElement 
 {
@@ -6,23 +6,23 @@ class Paging_Bar extends HTMLElement
   {
     super();
 
-    this.isZeroPageIdx = false;
-    this.srcTableId = null;
-    this.srcTableElem = null;
+    this.table_id = null;
+    this.table = null;
+
+    this.Render_Update = this.Render_Update.bind(this);
 
     this.attachShadow({mode: 'open'});
-    const rootElem = this.render();
-    this.shadowRoot.append(rootElem);
-
-    this.renderUpdate = this.renderUpdate.bind(this);
   }
 
   connectedCallback()
   {
-    if (this.srcTableId)
+    const rootElem = this.Render();
+    this.shadowRoot.append(rootElem);
+
+    if (this.table_id)
     {
-      const elem = document.getElementById(this.srcTableId);
-      this.setSrcTable(elem);
+      const elem = document.getElementById(this.table_id);
+      this.Set_Src_Table(elem);
     }
   }
 
@@ -31,124 +31,101 @@ class Paging_Bar extends HTMLElement
   {
     if (name == "table-id")
     {
-      this.srcTableId = newValue;
-      const elem = document.getElementById(this.srcTableId);
-      this.setSrcTable(elem);
+      this.table_id = newValue;
     }
   }
 
-  setSrcTable(elem)
+  Set_Src_Table(elem)
   {
-    this.srcTableElem = elem;
-    if (this.srcTableElem)
+    this.table = elem;
+    if (this.table)
     {
-      const selectElem = this.shadowRoot.getElementById("selLimitSuppliers");
-      selectElem.value = this.srcTableElem.pageSize;
-      selectElem.onchange = this.srcTableElem.setPageSize;
+      const selectElem = this.shadowRoot.getElementById("page_size_sel");
+      selectElem.value = this.table.page_size;
+      selectElem.onchange = (event) => this.table.Set_Page_Size(event.target.value);
   
-      this.shadowRoot.getElementById("btnPrevPageSuppliers").onclick = this.srcTableElem.gotoPrevPage;
-      this.shadowRoot.getElementById("btnFirstPageSuppliers").onclick = this.srcTableElem.gotoFirstPage;
-      this.shadowRoot.getElementById("btnLastPageSuppliers").onclick = this.srcTableElem.gotoLastPage;
-      this.shadowRoot.getElementById("btnNextPageSuppliers").onclick = this.srcTableElem.gotoNextPage;
+      this.shadowRoot.getElementById("btnPrevPageSuppliers").onclick = this.table.Goto_Prev_Page;
+      this.shadowRoot.getElementById("btnFirstPageSuppliers").onclick = this.table.Goto_First_Page;
+      this.shadowRoot.getElementById("btnLastPageSuppliers").onclick = this.table.Goto_Last_Page;
+      this.shadowRoot.getElementById("btnNextPageSuppliers").onclick = this.table.Goto_Next_Page;
   
-      this.renderUpdate();
+      this.Render_Update();
   
-      this.srcTableElem.addEventListener("update", this.renderUpdate);
+      this.table.addEventListener("update", this.Render_Update);
     }
   }
 
-  removeChildren(elem)
-  {
-    while (elem.firstChild) 
-    {
-      elem.removeChild(elem.lastChild);
-    }
-  }
-
-  renderUpdate()
+  Render_Update()
   {
     const countSpan = this.shadowRoot.getElementById("countSpan");
 
-    if (this.srcTableElem)
+    if (this.table)
     {
-      let currPage = this.srcTableElem.currPage;
-      if (this.isZeroPageIdx)
-      {
-        currPage++;
-      }
       countSpan.innerText = 
-        this.srcTableElem.itemCount + " Items, Page " + currPage + " of " + this.srcTableElem.pageCount;
+        this.table.item_count + " Items, " +
+        "Page " + (this.table.curr_page + 1) + " of " + this.table.page_count;
     }
   }
 
-  render()
+  Render()
   {
     const html = 
       `<style>
-        button
+        :host
         {
-          width: 40px;
-          height: 40px;
-          background: #fff;
-          border-right: 1px solid #ccc;
-          border-top: none;
-          border-bottom: none;
-          border-left: none;
-          cursor: pointer;
-          font-size: 14px;
+          padding: 5px;
+          display: inline-block;
+          font-size: 11px;
         }
-        button:hover
+        img
+        {
+          margin: 0;
+          padding: 0;
+          cursor: pointer;
+          vertical-align: middle;
+        }
+        img:hover
         {
           background: #eee;
         }
-        #sep
-        {
-          width: 30px;
-          height: 39px;
-          display: inline-block;
-          text-align: center;
-          padding: 0;
-          margin: 0;
-          border-right: 1px solid #ccc;
-          vertical-align: middle;
-        }
         #allBtnPanel
         {
-          border-top: 1px solid #ccc;
-          border-bottom: 1px solid #ccc;
-          border-left: 1px solid #ccc;
-          display: inline-block;
+          margin: 0 20px 0 0;
+          padding: 0;
         }
-        #selLimitSuppliers
+        #page_size_sel
         {
-          border-radius: 5px;
-          padding: 12px;
-          border: 1px solid #ccc;
+          font-size: 12px;
+          border: 2px solid #000;
+          vertical-align: middle;
           cursor: pointer;
-          margin-right: 50px;
-          margin-left: 10px;
+          margin-right: 20px;
+          border-radius: 3px;
         }
-        .currPage
+        .xcurrPage
         {
           background: #eee;
         }
         #countSpan
         {
-          margin-left: 20px;
+          font-weight: bold;
         }
       </style>
       
+      <span id="allBtnPanel">
+        <img id="btnFirstPageSuppliers" title="First Page" src="/src/images/icons8-first-24.png">
+        <img id="btnPrevPageSuppliers" title="Previous Page" src="/src/images/icons8-previous-24.png">
+        <img id="btnNextPageSuppliers" title="Next Page" src="/src/images/icons8-next-24.png">
+        <img id="btnLastPageSuppliers" title="Last Page" src="/src/images/icons8-last-24.png">
+      </span>
       Rows per page
-      <select id="selLimitSuppliers">
+      <select id="page_size_sel">
         <option value="10">10</option>
         <option value="20">20</option>
         <option value="30">30</option>
         <option value="40">40</option>
         <option value="50">50</option>
       </select>
-      <span id="allBtnPanel">
-        <button id="btnFirstPageSuppliers" title="First Page">&Lt;</button><button id="btnPrevPageSuppliers" title="Previous Page">&lt;</button><span id="pageBtnPanel"></span><button id="btnNextPageSuppliers" title="Next Page">&gt;</button><button id="btnLastPageSuppliers" title="Last Page">&Gt;</button>
-      </span>
       <span id="countSpan"></span>`;
     const doc = Utils.toDocument(html);
 

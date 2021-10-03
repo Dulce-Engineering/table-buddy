@@ -1,0 +1,30 @@
+{
+  "name": "table-buddy-frontend",
+  "version": "1.0.0",
+  "description": "Examples of how to use Table Buddy.",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dulce-Engineering/table-buddy.git"
+  },
+  "keywords": [
+    "web",
+    "component",
+    "tabl",
+    "esmaple",
+    "javascript",
+    "filter"
+  ],
+  "author": "Dulce Engineering",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Dulce-Engineering/table-buddy/issues"
+  },
+  "homepage": "https://github.com/Dulce-Engineering/table-buddy#readme",
+  "dependencies": {
+    "filter-buddy": "^1.0.1"
+  }
+}

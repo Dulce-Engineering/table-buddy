@@ -112,17 +112,12 @@
       {
         document.getElementById("sort_sel").addEventListener("change", On_Change_sort_sel);
 
-        const fb = document.getElementById("fb_min");
-        fb.addEventListener("search", OnSearch_Filter);
-        fb.filters = filters;
+        const filter_buddy = document.getElementById("fb");
+        filter_buddy.addEventListener("search", () => table.where = event.detail);
+        filter_buddy.filters = filters;
 
         table = document.getElementById("table");
         table.datasource = new Customer_Ds();
-      }
-
-      function OnSearch_Filter(event)
-      {
-        table.where = event.detail;
       }
 
       function On_Change_sort_sel(event)
@@ -133,7 +128,12 @@
   </head>
 
   <body>
-    <h1>API table with client-side paging and styling</h1>
+    <h1>API table with Filter Buddy and styling</h1>
+    <ul>
+      <li>Sorting is untouched, executed in a back-end API call, and rendered by in-page code.</li>
+      <li>Filtering is rendered through integration with Filter-Buddy.</li>
+      <li>Paging rendering has been implemented with a sample Web Component.</li>
+    </ul>
 
     <section>
       Sort By <select id="sort_sel">
@@ -146,7 +146,7 @@
     </section>
 
     <header>
-      <filter-buddy id="fb_min" view="mid" style-src="filter_buddy.css"></filter-buddy>
+      <filter-buddy id="fb" view="mid" style-src="filter_buddy.css"></filter-buddy>
       <paging-bar table-id="table"></paging-bar>
     </header>
     <table-buddy id="table" style-src="sample_styles.css"></table-buddy>

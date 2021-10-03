@@ -101,8 +101,6 @@ class Sales_Customers
       }
     }
 
-    const query = {where, order_by, params};
-
     const sql = 
       "select customer_id from sales_customers " + 
       (where!="" ? "where " + where + " ": "") + 

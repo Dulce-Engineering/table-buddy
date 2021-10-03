@@ -23,8 +23,8 @@ To use Table Buddy one needs to:
 3. Indicate which API calls to make
 4. Define how cells are rendered 
 
-The following example shows the relevant bits for defining a simple datasource
-to read customer data from a backend API Sales_Customers.Get_All().
+The following example shows the relevant bits for defining a simple datasource (Datasource.Memory)
+to read customer data from a backend API (Sales_Customers.Get_All). Additional datasource types exist for more complex scenarios.
 
 ```
 <script>

@@ -29,6 +29,7 @@ const rpc_buddy = new RPC_Buddy
     {name: "Sales_Customers.Count_All", inject: [db]},
     {name: "Sales_Customers.Get_All", inject: [db]},
     {name: "Sales_Customers.Get_All_Ids", inject: [db]},
+    {name: "Sales_Customers.Get_All_Ids2", inject: [db]},
     {name: "Sales_Customers.Get_By_Id", inject: [db]},
   ],
   RPC_Buddy.Express

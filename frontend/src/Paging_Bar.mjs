@@ -27,11 +27,11 @@ class Paging_Bar extends HTMLElement
   }
 
   static observedAttributes = ['table-id'];
-  attributeChangedCallback(name, oldValue, newValue) 
+  attributeChangedCallback(name, old_value, new_value) 
   {
     if (name == "table-id")
     {
-      this.table_id = newValue;
+      this.table_id = new_value;
     }
   }
 
@@ -40,14 +40,14 @@ class Paging_Bar extends HTMLElement
     this.table = elem;
     if (this.table)
     {
-      const selectElem = this.shadowRoot.getElementById("page_size_sel");
-      selectElem.value = this.table.page_size;
-      selectElem.onchange = (event) => this.table.Set_Page_Size(event.target.value);
+      const select_elem = this.shadowRoot.getElementById("page_size_sel");
+      select_elem.value = this.table.page_size;
+      select_elem.onchange = (event) => this.table.Set_Page_Size(event.target.value);
   
-      this.shadowRoot.getElementById("btnPrevPageSuppliers").onclick = this.table.Goto_Prev_Page;
-      this.shadowRoot.getElementById("btnFirstPageSuppliers").onclick = this.table.Goto_First_Page;
-      this.shadowRoot.getElementById("btnLastPageSuppliers").onclick = this.table.Goto_Last_Page;
-      this.shadowRoot.getElementById("btnNextPageSuppliers").onclick = this.table.Goto_Next_Page;
+      this.shadowRoot.getElementById("prev_btn").onclick = this.table.Goto_Prev_Page;
+      this.shadowRoot.getElementById("first_btn").onclick = this.table.Goto_First_Page;
+      this.shadowRoot.getElementById("last_btn").onclick = this.table.Goto_Last_Page;
+      this.shadowRoot.getElementById("next_btn").onclick = this.table.Goto_Next_Page;
   
       this.Render_Update();
   
@@ -57,11 +57,11 @@ class Paging_Bar extends HTMLElement
 
   Render_Update()
   {
-    const countSpan = this.shadowRoot.getElementById("countSpan");
+    const paging_span = this.shadowRoot.getElementById("paging_span");
 
     if (this.table)
     {
-      countSpan.innerText = 
+      paging_span.innerText = 
         this.table.item_count + " Items, " +
         "Page " + (this.table.curr_page + 1) + " of " + this.table.page_count;
     }
@@ -88,7 +88,7 @@ class Paging_Bar extends HTMLElement
         {
           background: #eee;
         }
-        #allBtnPanel
+        #btn_panel
         {
           margin: 0 20px 0 0;
           padding: 0;
@@ -106,17 +106,17 @@ class Paging_Bar extends HTMLElement
         {
           background: #eee;
         }
-        #countSpan
+        #paging_span
         {
           font-weight: bold;
         }
       </style>
       
-      <span id="allBtnPanel">
-        <img id="btnFirstPageSuppliers" title="First Page" src="/src/images/icons8-first-24.png">
-        <img id="btnPrevPageSuppliers" title="Previous Page" src="/src/images/icons8-previous-24.png">
-        <img id="btnNextPageSuppliers" title="Next Page" src="/src/images/icons8-next-24.png">
-        <img id="btnLastPageSuppliers" title="Last Page" src="/src/images/icons8-last-24.png">
+      <span id="btn_panel">
+        <img id="first_btn" title="First Page" src="/src/images/icons8-first-24.png">
+        <img id="prev_btn" title="Previous Page" src="/src/images/icons8-previous-24.png">
+        <img id="next_btn" title="Next Page" src="/src/images/icons8-next-24.png">
+        <img id="last_btn" title="Last Page" src="/src/images/icons8-last-24.png">
       </span>
       Rows per page
       <select id="page_size_sel">
@@ -126,7 +126,7 @@ class Paging_Bar extends HTMLElement
         <option value="40">40</option>
         <option value="50">50</option>
       </select>
-      <span id="countSpan"></span>`;
+      <span id="paging_span"></span>`;
     const doc = Utils.toDocument(html);
 
     return doc;

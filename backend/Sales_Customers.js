@@ -1,3 +1,5 @@
+const Utils = require('./Utils');
+
 class Sales_Customers
 {
   static table = "sales_customers";
@@ -61,6 +63,51 @@ class Sales_Customers
       query.where + " " + 
       query.order_by;
     return db.Select_Values(query.sql, query.params);
+  }
+
+  static Get_All_Ids2(db, filter_by, sort_by)
+  {
+    let where = "", order_by = "", params = [];
+
+    if (filter_by && filter_by.CONTAINS)
+    {
+      where = Utils.Append_Str(where, "(first_name || ' ' || last_name || ' ' || email) like ?", " and ");
+      params.push("%" + filter_by.CONTAINS + "%");
+    }
+    if (filter_by && filter_by.FIRSTNAME)
+    {
+      where = Utils.Append_Str(where, "first_name like ?", " and ");
+      params.push("%" + filter_by.FIRSTNAME + "%");
+    }
+    if (filter_by && filter_by.SURNAME)
+    {
+      where = Utils.Append_Str(where, "last_name like ?", " and ");
+      params.push("%" + filter_by.SURNAME + "%");
+    }
+    if (filter_by && filter_by.ADDRESS)
+    {
+      where = Utils.Append_Str(where, "(street || ' ' || city || ' ' || state || ' ' || zip_code) like ?", " and ");
+      params.push("%" + filter_by.ADDRESS + "%");
+    }
+
+    if (sort_by)
+    {
+      switch (sort_by)
+      {
+        case "FIRSTNAME_ASC": order_by = "first_name asc"; break;
+        case "FIRSTNAME_DSC": order_by = "first_name desc"; break;
+        case "LASTNAME_ASC": order_by = "last_name asc"; break;
+        case "LASTNAME_DSC": order_by = "last_name desc"; break;
+      }
+    }
+
+    const query = {where, order_by, params};
+
+    const sql = 
+      "select customer_id from sales_customers " + 
+      (where!="" ? "where " + where + " ": "") + 
+      (order_by!="" ? "order by " + order_by: "");
+    return db.Select_Values(sql, params);
   }
 
   static Get_By_Id(db, id)

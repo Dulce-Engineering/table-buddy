@@ -19,6 +19,12 @@
         font-weight: bold;
         margin-left: 10px;
       }
+      header
+      {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+      }
     </style>
     <script type="module">
       import Sales_Customers from "/rpc-client?class=Sales_Customers";
@@ -41,7 +47,7 @@
 
         async Update_Data(filter_by, sort_by)
         {
-          this.data = await Sales_Customers.Get_All_Ids(filter_by, sort_by);
+          this.data = await Sales_Customers.Get_All_Ids2(filter_by, sort_by);
         }
 
         Get_Row_Data(id)
@@ -74,21 +80,49 @@
           return res;
         }
       }
+      
+      const filters =
+      [
+        {
+          id: "CONTAINS",
+          label: "Contains",
+          in_mid_view: true,
+          filter_class: Filter_Buddy.Text, 
+        },
+        {
+          id: "FIRSTNAME",
+          label: "First Name",
+          filter_class: Filter_Buddy.Text, 
+        },
+        {
+          id: "SURNAME",
+          label: "Last Name",
+          filter_class: Filter_Buddy.Text, 
+        },
+        {
+          id: "ADDRESS",
+          label: "Address",
+          filter_class: Filter_Buddy.Text, 
+        }
+      ];
 
       let table;
       window.onload = main;
       function main()
       {
-        document.getElementById("search_input").addEventListener("change", On_Change_search_input);
         document.getElementById("sort_sel").addEventListener("change", On_Change_sort_sel);
+
+        const fb = document.getElementById("fb_min");
+        fb.addEventListener("search", OnSearch_Filter);
+        fb.filters = filters;
 
         table = document.getElementById("table");
         table.datasource = new Customer_Ds();
       }
 
-      function On_Change_search_input(event)
+      function OnSearch_Filter(event)
       {
-        table.where = event.target.value;
+        table.where = event.detail;
       }
 
       function On_Change_sort_sel(event)
@@ -102,10 +136,6 @@
     <h1>API table with client-side paging and styling</h1>
 
     <section>
-      Search <input id="search_input" type="text">
-    </section>
-
-    <section>
       Sort By <select id="sort_sel">
         <option>None</option>
         <option value="FIRSTNAME_ASC">First Name Asc.</option>
@@ -115,8 +145,10 @@
       </select>
     </section>
 
-    <filter-buddy></filter-buddy>
-    <paging-bar table-id="table"></paging-bar>
+    <header>
+      <filter-buddy id="fb_min" view="mid" style-src="filter_buddy.css"></filter-buddy>
+      <paging-bar table-id="table"></paging-bar>
+    </header>
     <table-buddy id="table" style-src="sample_styles.css"></table-buddy>
   </body>
 </html>

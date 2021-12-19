@@ -2,6 +2,8 @@ import Utils from "./Utils.mjs";
 
 class Table_Buddy extends HTMLElement 
 {
+  static name = "table-buddy";
+  
   constructor() 
   {
     super();
@@ -10,7 +12,7 @@ class Table_Buddy extends HTMLElement
     this.rows = null;
     this.order_by_code = null;
     this.filters = null;
-    this.page_size = 10;
+    this.page_size = 0;
     this.page_start = 0;
     this.curr_page = 0;
     this.page_count = 0;
@@ -23,6 +25,7 @@ class Table_Buddy extends HTMLElement
     this.Goto_First_Page = this.Goto_First_Page.bind(this);
     this.Goto_Last_Page = this.Goto_Last_Page.bind(this);
     this.Goto_Next_Page = this.Goto_Next_Page.bind(this);
+    this.Row_Click = this.Row_Click.bind(this);
 
     this.attachShadow({mode: 'open'});
     this.updateEvent = new Event("update");
@@ -64,6 +67,32 @@ class Table_Buddy extends HTMLElement
     this.Update_Render();
   }
 
+  Get_Cell_Data(column, rowData, colIdx, rowElem)
+  {
+    let cellData;
+
+    if (column.field_name)
+    {
+      cellData = rowData[column.field_name];
+    }
+    if (column.field_fn)
+    {
+      cellData = column.field_fn(rowData);
+    }
+    else if (this.ds.Get_Cell_Data)
+    {
+      cellData = this.ds.Get_Cell_Data(colIdx, rowData, rowElem);
+    }
+
+    return cellData;
+  }
+
+  Row_Click(event)
+  {
+    const clickrow_event = new CustomEvent('clickrow', { detail: event.target.parentElement.row_data });
+    this.dispatchEvent(clickrow_event);
+  }
+
   // Rendering ====================================================================================
 
   Show_Busy()
@@ -96,6 +125,10 @@ class Table_Buddy extends HTMLElement
         await this.ds.Update_Data(this.filters, this.order_by_code);
         this.item_count = await this.ds.Get_Data_Length(this.filters, this.order_by_code);
       }
+      if (!this.page_size)
+      {
+        this.page_size = this.item_count;
+      }
       this.page_count = Math.ceil(this.item_count/this.page_size);
       this.rows = await this.ds.Get_Page_Data(this.filters, this.order_by_code, this.page_size, this.page_start);
 
@@ -122,14 +155,16 @@ class Table_Buddy extends HTMLElement
 
   Render()
   {
-    let style = "";
-    if (this.style_src)
-    {
-      style = "<link rel=\"stylesheet\" href=\"" + this.style_src + "\"></link>";
-    }
-    const html = `
-      ${style}
+    let style = `
       <style>
+        :host
+    {
+          display: inline-block;
+        }
+        #tableElem
+        {
+          width: 100%;
+    }
         #tableContainer
         {
           position: relative;
@@ -158,7 +193,13 @@ class Table_Buddy extends HTMLElement
           background: #cccccc;
           pointer-events: none;
         }
-      </style>
+      </style>`;
+    if (this.style_src)
+    {
+      style = "<link rel=\"stylesheet\" href=\"" + this.style_src + "\"></link>";
+    }
+    const html = `
+      ${style}
 
       <div id="tableContainer">
         <div id="tableOverlay">
@@ -212,7 +253,11 @@ class Table_Buddy extends HTMLElement
   {
     const titleElem = document.createElement("th");
     titleElem.style.width = column.width;
-    this.Render_As_Type(column.renderAs, titleElem, column.title);
+    if (column.style)
+    {
+      titleElem.style = column.style;
+    }
+    this.Render_As_Type(null, titleElem, column.title);
     titleElem.id = "title_" + idx;
 
     return titleElem;
@@ -233,13 +278,16 @@ class Table_Buddy extends HTMLElement
     }
   }
 
-  Render_Row(columns, rowData)
+  Render_Row(columns, row_data)
   {
     const rowElem = document.createElement("tr");
+    rowElem.addEventListener("click", this.Row_Click);
+    rowElem.row_data = row_data;
     for (let colIdx = 0; colIdx < columns.length; colIdx++)
     {
-      const cellData = this.ds.Get_Cell_Data(colIdx, rowData, rowElem);
-      const cellElem = this.Render_Cell(columns[colIdx], cellData);
+      const column = columns[colIdx];
+      const cellData = this.Get_Cell_Data(column, row_data, colIdx, rowElem);
+      const cellElem = this.Render_Cell(column, cellData);
       rowElem.append(cellElem);
     }
 
@@ -249,7 +297,11 @@ class Table_Buddy extends HTMLElement
   Render_Cell(column, cellData)
   {
     const cellElem = document.createElement("td");
-    this.Render_As_Type(column.renderAs, cellElem, cellData);
+    if (column.style)
+    {
+      cellElem.style = column.style;
+    }
+    this.Render_As_Type(column, cellElem, cellData);
 
     return cellElem;
   }
@@ -258,16 +310,32 @@ class Table_Buddy extends HTMLElement
   {
   }
 
-  Render_As_Type(type, dstElem, data)
+  Render_As_Type(column, dstElem, data)
   {
-    if (type == "text")
+    if (data)
+    {
+      const render_as = column?.renderAs || column?.render_as;
+      if (render_as == "text")
     {
       dstElem.innerText = data;
     }
-    else if (type == "html")
+      else if (render_as == "html")
     {
       dstElem.innerHTML = data;
     }
+      else if (render_as == "date")
+      {
+        const date = new Date(data);
+        dstElem.append(date.toLocaleDateString());
+      }
+      else if (render_as == "url")
+      {
+        const elem = document.createElement("a");
+        elem.href = data;
+        elem.innerText = column.title;
+        elem.target = "_blank";
+        dstElem.append(elem);
+      }
     else if (Array.isArray(data))
     {
       for (const elem of data)
@@ -278,6 +346,7 @@ class Table_Buddy extends HTMLElement
     else
     {
       dstElem.append(data);
+      }
     }
   }
 

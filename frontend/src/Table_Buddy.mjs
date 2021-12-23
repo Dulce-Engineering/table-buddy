@@ -33,8 +33,7 @@ class Table_Buddy extends HTMLElement
 
   connectedCallback()
   {
-    const rootElem = this.Render();
-    this.shadowRoot.append(rootElem);
+    this.Render();
   }
 
   disconnectedCallback()
@@ -58,13 +57,21 @@ class Table_Buddy extends HTMLElement
   
   set datasource(ds)
   {
+    this.Set_Datasource(ds);
+  }
+  
+  async Set_Datasource(ds)
+  {
     this.ds = ds;
 
+    if (this.ds)
+    {
     const columns = this.ds.Get_Columns();
     this.Render_Header_Columns(columns);
+    }
     this.Render_Footer_Cells(this.footerRowElem);
 
-    this.Update_Render();
+    await this.Update_Render();
   }
 
   Get_Cell_Data(column, rowData, colIdx, rowElem)
@@ -93,6 +100,18 @@ class Table_Buddy extends HTMLElement
     this.dispatchEvent(clickrow_event);
   }
 
+  Get_Columns()
+  {
+    let columns;
+
+    if (this.ds)
+    {
+      columns = this.ds.Get_Columns();
+    }
+
+    return columns;
+  }
+
   // Rendering ====================================================================================
 
   Show_Busy()
@@ -113,39 +132,49 @@ class Table_Buddy extends HTMLElement
     }
   }
 
-  async Update_Render(is_page_update)
-  {
-    if (this.ds)
+  Render_Msg(msg)
     {
-      this.Show_Busy();
-      const columns = this.ds.Get_Columns();
+    let columns_length = 1;
 
-      if (!is_page_update)
-      {
-        await this.ds.Update_Data(this.filters, this.order_by_code);
-        this.item_count = await this.ds.Get_Data_Length(this.filters, this.order_by_code);
-      }
-      if (!this.page_size)
-      {
-        this.page_size = this.item_count;
-      }
-      this.page_count = Math.ceil(this.item_count/this.page_size);
-      this.rows = await this.ds.Get_Page_Data(this.filters, this.order_by_code, this.page_size, this.page_start);
+    const columns = this.Get_Columns();
+    if (columns) columns_length = columns.length;
 
+    const td = document.createElement("td");
+    td.colSpan = columns_length;
+    td.innerText = msg;
+
+    const tr = document.createElement("tr");
+    tr.append(td);
+
+    this.bodyElem.replaceChildren(tr);
+      }
+
+  async Update_Render(is_page_update)
+      {
+    this.Show_Busy();
+    await this.Update_Data(is_page_update);
+
+    const columns = this.Get_Columns();
       this.Update_Render_Header_Columns(columns);
       await this.Update_Render_Body_Rows(columns, this.rows);
 
       this.dispatchEvent(this.updateEvent);
       this.Hide_Busy();
     }
-  }
 
   Update_Render_Header_Columns(columns)
   {
+    if (columns)
+    {
     for (let i = 0; i < columns.length; i++)
     {
       const column = columns[i];
       this.Update_Render_Header_Cell(column, i);
+    }
+  }
+    else
+    {
+      this.headerRowElem.replaceChildren();
     }
   }
 
@@ -218,22 +247,18 @@ class Table_Buddy extends HTMLElement
         <table id="tableElem">
           <thead><tr id="headerRowElem"></tr></thead>
           <tbody id="bodyElem">
-            <tr><td colspan="10">&nbsp;</td></tr>
-            <tr><td colspan="10">&nbsp;</td></tr>
-            <tr><td colspan="10">&nbsp;</td></tr>
-            <tr><td colspan="10">&nbsp;</td></tr>
-            <tr><td colspan="10">&nbsp;</td></tr>
-            <tr><td colspan="10">&nbsp;</td></tr>
           </tbody>
           <tfoot><tr id="footerRowElem"></tr></tfoot>
         </table>
       </div>
       `;
     const tableElem = Utils.toDocument(html);
+    this.shadowRoot.append(tableElem);
 
-    this.headerRowElem = tableElem.getElementById("headerRowElem");
-    this.bodyElem = tableElem.getElementById("bodyElem");
-    this.footerRowElem = tableElem.getElementById("footerRowElem");
+    this.headerRowElem = this.shadowRoot.querySelector("#headerRowElem");
+    this.bodyElem = this.shadowRoot.querySelector("#bodyElem");
+    this.footerRowElem = this.shadowRoot.querySelector("#footerRowElem");
+    this.Render_Msg("Please Wait...");
 
     return tableElem;
   }
@@ -266,15 +291,19 @@ class Table_Buddy extends HTMLElement
   async Update_Render_Body_Rows(columns, rows)
   {
     rows = await rows;
-    this.bodyElem.replaceChildren();
     if (rows)
     {
+      this.bodyElem.replaceChildren();
       for (const row of rows)
       {
         const rowData = await this.ds.Get_Row_Data(row);
         const rowElem = this.Render_Row(columns, rowData);
         this.bodyElem.append(rowElem);
       }
+    }
+    else
+    {
+      this.Render_Msg("No data to display.");
     }
   }
 
@@ -350,7 +379,31 @@ class Table_Buddy extends HTMLElement
     }
   }
 
-  // Filter and Sort ==============================================================================
+  // Update, Filter and Sort Data =================================================================
+
+  async Update_Data(is_page_update)
+  {
+    if (this.ds)
+    {
+      if (!is_page_update)
+      {
+        await this.ds.Update_Data(this.filters, this.order_by_code);
+        this.item_count = await this.ds.Get_Data_Length(this.filters, this.order_by_code);
+      }
+      if (!this.page_size)
+      {
+        this.page_size = this.item_count;
+      }
+      this.page_count = Math.ceil(this.item_count/this.page_size);
+      this.rows = await this.ds.Get_Page_Data(this.filters, this.order_by_code, this.page_size, this.page_start);
+    }
+    else
+    {
+      this.item_count = 0;
+      this.page_count = 1;
+      this.rows = null;
+    }
+  }
 
   set order_by(order_by_code)
   {

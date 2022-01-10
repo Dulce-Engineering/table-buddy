@@ -2,7 +2,7 @@ import Utils from "./Utils.mjs";
 
 class Table_Buddy extends HTMLElement 
 {
-  static name = "table-buddy";
+  static tname = "table-buddy";
   
   constructor() 
   {

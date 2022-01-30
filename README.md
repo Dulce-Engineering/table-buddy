@@ -33,9 +33,10 @@ to read customer data from a backend API (Sales_Customers.Get_All). Additional d
     Get_Columns()
     {
       return [
-        {title: "Name"}, 
-        {title: "Contact"}, 
-        {title: "Address"}];
+        {title: "Name", field_name: "first_name"}, 
+        {title: "Surname", field_name: "last_name"}, 
+        {title: "Address", field_fn: this.Render_Address}
+      ];
     }
 
     async Update_Data(filter_by, sort_by)
@@ -43,18 +44,9 @@ to read customer data from a backend API (Sales_Customers.Get_All). Additional d
       this.data = await Sales_Customers.Get_All(filter_by, sort_by);
     }
     
-    Get_Cell_Data(col_id, customer)
+    Render_Address(customer)
     {
-      let res = "";
-
-      switch(col_id)
-      {
-        case 0: res = customer.first_name + " " + customer.last_name; break;
-        case 1: res = customer.phone + ", " + customer.email; break;
-        case 2: res = customer.street + ", " + customer.city + ", " + customer.state; break;
-      }
-
-      return res;
+      return customer.street + ", " + customer.city + ", " + customer.state; break;
     }
   }
 
@@ -68,9 +60,6 @@ to read customer data from a backend API (Sales_Customers.Get_All). Additional d
 ```
 
 ## To Do
-- Row number column
-- Row select column
-- Support multi-row select
 - Show/Hide columns
 - Set column positions
 - Order by column

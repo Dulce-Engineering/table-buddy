@@ -25,6 +25,6 @@
   },
   "homepage": "https://github.com/Dulce-Engineering/table-buddy#readme",
   "dependencies": {
-    "filter-buddy": "^1.0.1"
+    "filter-buddy": "^1.1.1"
   }
 }

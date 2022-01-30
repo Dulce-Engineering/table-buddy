@@ -80,6 +80,7 @@
         document.getElementById("size_sel").addEventListener("change", On_Change_size_sel);
 
         table = document.getElementById("table");
+        table.page_size = 10;
         table.addEventListener("update", On_Update_table);
         table.datasource = new Customer_Ds();
       }

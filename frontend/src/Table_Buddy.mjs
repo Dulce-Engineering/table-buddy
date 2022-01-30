@@ -141,20 +141,20 @@ class Table_Buddy extends HTMLElement
 
   Show_Busy()
   {
-    if (this.show_busy)
+    /*if (this.show_busy)
     {
       const overlayElem = this.shadowRoot.getElementById("tableOverlay");
       overlayElem.style.display = "flex";
-    }
+    }*/
   }
 
   Hide_Busy()
   {
-    if (this.show_busy)
+    /*if (this.show_busy)
     {
       const overlayElem = this.shadowRoot.getElementById("tableOverlay");
       overlayElem.style.display = "none";
-    }
+    }*/
   }
 
   Render_Msg(msg)
@@ -256,7 +256,7 @@ class Table_Buddy extends HTMLElement
       ${style}
 
       <div id="tableContainer">
-        <div id="tableOverlay">
+        <!--div id="tableOverlay">
           <svg width="50px" height="50px" viewBox="0 0 600 600">
           <path id="tableOverlayGear"
             stroke="black" fill="#444" width="20%" height="20%"
@@ -268,7 +268,7 @@ class Table_Buddy extends HTMLElement
             M413.733,359.967c-39.734,69.426-128.229,93.496-197.655,53.762s-93.495-128.23-53.761-197.655    
             c39.734-69.425,128.229-93.495,197.654-53.761C429.397,202.047,453.468,290.542,413.733,359.967z"/>
           </svg>
-        </div>
+        </div-->
         <table id="tableElem">
           <thead><tr id="headerRowElem"></tr></thead>
           <tbody id="bodyElem">

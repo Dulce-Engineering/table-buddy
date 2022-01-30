@@ -18,6 +18,7 @@ class Table_Buddy extends HTMLElement
     this.page_count = 0;
     this.item_count = 0;
     this.show_busy = false;
+    this.columns = null;
 
     this.Set_Page_Size = this.Set_Page_Size.bind(this);
     this.Goto_Page = this.Goto_Page.bind(this);
@@ -63,18 +64,14 @@ class Table_Buddy extends HTMLElement
   async Set_Datasource(ds)
   {
     this.ds = ds;
-
-    if (this.ds)
-    {
-    const columns = this.ds.Get_Columns();
-    this.Render_Header_Columns(columns);
-    }
+    const columns = this.Get_Columns();
+    this.Render_Header_Row(columns);
     this.Render_Footer_Cells(this.footerRowElem);
 
     await this.Update_Render();
   }
 
-  Get_Cell_Data(column, rowData, colIdx, rowElem)
+  Get_Cell_Data(column, rowData, colIdx, rowElem, row_idx)
   {
     let cellData;
 
@@ -84,11 +81,27 @@ class Table_Buddy extends HTMLElement
     }
     if (column.field_fn)
     {
-      cellData = column.field_fn(rowData);
+      cellData = column.field_fn(rowData, row_idx);
     }
     else if (this.ds.Get_Cell_Data)
     {
       cellData = this.ds.Get_Cell_Data(colIdx, rowData, rowElem);
+    }
+
+    return cellData;
+  }
+
+  Get_Header_Cell_Data(column, colIdx, rowElem)
+  {
+    let cellData;
+
+    if (column.title)
+    {
+      cellData = column.title;
+    }
+    else if (column.title_fn)
+    {
+      cellData = column.title_fn();
     }
 
     return cellData;
@@ -102,14 +115,26 @@ class Table_Buddy extends HTMLElement
 
   Get_Columns()
   {
-    let columns;
-
-    if (this.ds)
+    if (!this.columns && this.ds)
     {
-      columns = this.ds.Get_Columns();
+      this.columns = [];
+      let user_columns = this.ds.Get_Columns();
+      for (const user_column of user_columns)
+      {
+        let column = user_column;
+        if (!column.constructor.name.startsWith("Column_"))
+        {
+          column = new Column_Field();
+          Object.assign(column, user_column);
+        }
+
+        column.ds = this.ds;
+        column.table_buddy = this;
+        this.columns.push(column);
+      }
     }
 
-    return columns;
+    return this.columns;
   }
 
   // Rendering ====================================================================================
@@ -133,7 +158,7 @@ class Table_Buddy extends HTMLElement
   }
 
   Render_Msg(msg)
-    {
+  {
     let columns_length = 1;
 
     const columns = this.Get_Columns();
@@ -147,31 +172,31 @@ class Table_Buddy extends HTMLElement
     tr.append(td);
 
     this.bodyElem.replaceChildren(tr);
-      }
+  }
 
   async Update_Render(is_page_update)
-      {
+  {
     this.Show_Busy();
     await this.Update_Data(is_page_update);
 
     const columns = this.Get_Columns();
-      this.Update_Render_Header_Columns(columns);
-      await this.Update_Render_Body_Rows(columns, this.rows);
+    this.Update_Render_Header_Row(columns);
+    await this.Update_Render_Body_Rows(columns, this.rows);
 
-      this.dispatchEvent(this.updateEvent);
-      this.Hide_Busy();
-    }
+    this.dispatchEvent(this.updateEvent);
+    this.Hide_Busy();
+  }
 
-  Update_Render_Header_Columns(columns)
+  Update_Render_Header_Row(columns)
   {
     if (columns)
     {
-    for (let i = 0; i < columns.length; i++)
-    {
-      const column = columns[i];
-      this.Update_Render_Header_Cell(column, i);
+      for (let i = 0; i < columns.length; i++)
+      {
+        const column = columns[i];
+        this.Update_Render_Header_Cell(column, i);
+      }
     }
-  }
     else
     {
       this.headerRowElem.replaceChildren();
@@ -187,13 +212,13 @@ class Table_Buddy extends HTMLElement
     let style = `
       <style>
         :host
-    {
+        {
           display: inline-block;
         }
         #tableElem
         {
           width: 100%;
-    }
+        }
         #tableContainer
         {
           position: relative;
@@ -263,18 +288,27 @@ class Table_Buddy extends HTMLElement
     return tableElem;
   }
 
-  Render_Header_Columns(columns)
+  Render_Header_Row(columns)
   {
     this.headerRowElem.replaceChildren();
     for (let i = 0; i < columns.length; i++)
     {
       const column = columns[i];
-      const cellElem = this.Render_Header_Cell(column, i);
+      const cellData = this.Get_Header_Cell_Data(column, i, this.headerRowElem);
+      let cellElem;
+      if (column.Render_Header_Cell)
+      {
+        cellElem = column.Render_Header_Cell(i, cellData);
+      }
+      else
+      {
+        cellElem = this.Render_Header_Cell(column, i, cellData);
+      }
       this.headerRowElem.append(cellElem);
     }
   }
 
-  Render_Header_Cell(column, idx)
+  Render_Header_Cell(column, idx, cellData)
   {
     const titleElem = document.createElement("th");
     titleElem.style.width = column.width;
@@ -282,7 +316,7 @@ class Table_Buddy extends HTMLElement
     {
       titleElem.style = column.style;
     }
-    this.Render_As_Type(null, titleElem, column.title);
+    Table_Buddy.Render_As_Type(null, titleElem, cellData);
     titleElem.id = "title_" + idx;
 
     return titleElem;
@@ -294,10 +328,11 @@ class Table_Buddy extends HTMLElement
     if (rows)
     {
       this.bodyElem.replaceChildren();
-      for (const row of rows)
+      for (let row_idx = 0; row_idx < rows.length; row_idx++)
       {
+        const row = rows[row_idx];
         const rowData = await this.ds.Get_Row_Data(row);
-        const rowElem = this.Render_Row(columns, rowData);
+        const rowElem = this.Render_Row(columns, rowData, row_idx);
         this.bodyElem.append(rowElem);
       }
     }
@@ -307,7 +342,7 @@ class Table_Buddy extends HTMLElement
     }
   }
 
-  Render_Row(columns, row_data)
+  Render_Row(columns, row_data, row_idx)
   {
     const rowElem = document.createElement("tr");
     rowElem.addEventListener("click", this.Row_Click);
@@ -315,8 +350,10 @@ class Table_Buddy extends HTMLElement
     for (let colIdx = 0; colIdx < columns.length; colIdx++)
     {
       const column = columns[colIdx];
-      const cellData = this.Get_Cell_Data(column, row_data, colIdx, rowElem);
+      const cellData = this.Get_Cell_Data(column, row_data, colIdx, rowElem, row_idx);
+
       const cellElem = this.Render_Cell(column, cellData);
+
       rowElem.append(cellElem);
     }
 
@@ -330,7 +367,7 @@ class Table_Buddy extends HTMLElement
     {
       cellElem.style = column.style;
     }
-    this.Render_As_Type(column, cellElem, cellData);
+    Table_Buddy.Render_As_Type(column, cellElem, cellData);
 
     return cellElem;
   }
@@ -339,19 +376,19 @@ class Table_Buddy extends HTMLElement
   {
   }
 
-  Render_As_Type(column, dstElem, data)
+  static Render_As_Type(column, dstElem, data)
   {
     if (data)
     {
       const render_as = column?.renderAs || column?.render_as;
       if (render_as == "text")
-    {
-      dstElem.innerText = data;
-    }
+      {
+        dstElem.innerText = data;
+      }
       else if (render_as == "html")
-    {
-      dstElem.innerHTML = data;
-    }
+      {
+        dstElem.innerHTML = data;
+      }
       else if (render_as == "date")
       {
         const date = new Date(data);
@@ -365,16 +402,16 @@ class Table_Buddy extends HTMLElement
         elem.target = "_blank";
         dstElem.append(elem);
       }
-    else if (Array.isArray(data))
-    {
-      for (const elem of data)
+      else if (Array.isArray(data))
       {
-        dstElem.append(elem);
+        for (const elem of data)
+        {
+          dstElem.append(elem);
+        }
       }
-    }
-    else
-    {
-      dstElem.append(data);
+      else
+      {
+        dstElem.append(data);
       }
     }
   }
@@ -478,5 +515,105 @@ class Table_Buddy extends HTMLElement
     }
   }
 }
+
+class Column_Field
+{
+  constructor()
+  {
+    this.width = null; // eg "100px"
+    this.style = null; // eg "css-class-red"
+    this.title = null; // eg "Customer Name"
+    this.field_fn = null;
+    this.renderAs = null; // text, html, date, url
+  }
+}
+Table_Buddy.Column_Field = Column_Field;
+
+class Column_Select
+{
+  constructor(id_field_name)
+  {
+    this.id_field_name = id_field_name;
+    this.selected_ids = [];
+    this.width = null;
+    this.style = null;
+    this.title_fn = this.Render_Header_Select;
+    this.field_fn = this.Render_Select;
+
+    this.On_Click_Select_All = this.On_Click_Select_All.bind(this);
+    this.On_Click_Select_Row = this.On_Click_Select_Row.bind(this);
+  }
+
+  Render_Header_Select()
+  {
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = "select_all";
+    checkbox.addEventListener("click", this.On_Click_Select_All);
+    return checkbox;
+  }
+
+  Render_Select(row_data, row_idx)
+  {
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = "select_" + row_idx;
+    checkbox.addEventListener("click", this.On_Click_Select_Row);
+
+    const id = row_data[this.id_field_name];
+    if (this.selected_ids.includes(id))
+    {
+      checkbox.checked = true;
+    }
+    checkbox.data_id = id;
+
+    return checkbox;
+  }
+
+  On_Click_Select_All(event)
+  {
+    if (event.target.checked)
+      this.Select_All();
+    else
+      this.Unselect_All();
+    this.table_buddy.Update_Render();
+  }
+
+  On_Click_Select_Row(event)
+  {
+    if (event.target.checked)
+      this.selected_ids.push(event.target.data_id);
+    else
+      this.selected_ids = this.selected_ids.filter(id => id != event.target.data_id);
+  }
+
+  Select_All()
+  {
+    this.selected_ids = [...this.ds.data];
+  }
+
+  Unselect_All()
+  {
+    this.selected_ids = [];
+  }
+}
+Table_Buddy.Column_Select = Column_Select;
+
+class Column_No
+{
+  constructor()
+  {
+    this.width = null;
+    this.style = null;
+    this.title = "#";
+    this.field_fn = this.Render_No;
+  }
+
+  Render_No(row_data, row_idx)
+  {
+    return  this.table_buddy.page_size * this.table_buddy.curr_page + row_idx + 1;
+  }
+}
+Table_Buddy.Column_No = Column_No;
 
 export default Table_Buddy;

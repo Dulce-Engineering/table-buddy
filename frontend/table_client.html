@@ -32,7 +32,13 @@
       {
         Get_Columns()
         {
-          return [{title: "Name"}, {title: "Contact", renderAs: "html"}, {title: "Address"}];
+          return [
+            new Table_Buddy.Column_Select("customer_id"), 
+            new Table_Buddy.Column_No(), 
+            {title: "Name", field_fn: this.Render_Name}, 
+            {title: "Contact", field_fn: this.Render_Contact, renderAs: "html"}, 
+            {title: "Address", field_fn: this.Render_Address}
+          ];
         }
 
         async Update_Data(filter_by, sort_by)
@@ -45,28 +51,23 @@
           return Sales_Customers.Get_By_Id(id);
         }
         
-        Get_Cell_Data(col_id, customer)
+        Render_Name(customer)
         {
-          let res = "";
+          return Utils.appendStr(customer.first_name, customer.last_name, " ");
+        }
 
-          switch(col_id)
-          {
-            case 0: // Name
-              res = Utils.appendStr(customer.first_name, customer.last_name, " ");
-              break;
+        Render_Contact(customer)
+        {
+          return Utils.appendStr("Phone: " + customer.phone, "Email: " + customer.email, "<br>");
+        }
 
-            case 1: // Contact
-              res = Utils.appendStr("Phone: " + customer.phone, "Email: " + customer.email, "<br>");
-              break;
-
-            case 2: // Address
-              res = Utils.appendStr(res, customer.street, ", ");
-              res = Utils.appendStr(res, customer.city, ", ");
-              res = Utils.appendStr(res, customer.state, ", ");
-              res = Utils.appendStr(res, customer.zip_code, ", ");
-              break;
-          }
-
+        Render_Address(customer)
+        {
+          let res;
+          res = Utils.appendStr(res, customer.street, ", ");
+          res = Utils.appendStr(res, customer.city, ", ");
+          res = Utils.appendStr(res, customer.state, ", ");
+          res = Utils.appendStr(res, customer.zip_code, ", ");
           return res;
         }
       }
@@ -85,6 +86,7 @@
         document.getElementById("size_sel").addEventListener("change", On_Change_size_sel);
 
         table = document.getElementById("table");
+        table.page_size = 10;
         table.addEventListener("update", On_Update_table);
         table.datasource = new Customer_Ds();
       }

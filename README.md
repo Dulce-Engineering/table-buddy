@@ -66,3 +66,11 @@ to read customer data from a backend API (Sales_Customers.Get_All). Additional d
 </body>
 
 ```
+
+## To Do
+- Row number column
+- Row select column
+- Support multi-row select
+- Show/Hide columns
+- Set column positions
+- Order by column

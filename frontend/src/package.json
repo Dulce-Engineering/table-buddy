@@ -1,6 +1,6 @@
 {
   "name": "table-buddy",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Finally, what the world needs! Another table component. This one's plain JavaScript, based on Web Components, with no additional dependencies.",
   "main": "Table_Buddy.mjs",
   "scripts": {

@@ -71,24 +71,24 @@ class Table_Buddy extends HTMLElement
     await this.Update_Render();
   }
 
-  Get_Cell_Data(column, rowData, colIdx, rowElem, row_idx)
+  Get_Cell_Data(column, rowData, colIdx, rowElem, row_idx, cell_elem)
   {
-    let cellData;
+    let cell_child_elems;
 
     if (column.field_name)
     {
-      cellData = rowData[column.field_name];
+      cell_child_elems = rowData[column.field_name];
     }
     if (column.field_fn)
     {
-      cellData = column.field_fn(rowData, row_idx);
+      cell_child_elems = column.field_fn(rowData, row_idx, cell_elem);
     }
     else if (this.ds.Get_Cell_Data)
     {
-      cellData = this.ds.Get_Cell_Data(colIdx, rowData, rowElem);
+      cell_child_elems = this.ds.Get_Cell_Data(colIdx, rowData, rowElem);
     }
 
-    return cellData;
+    return cell_child_elems;
   }
 
   Get_Header_Cell_Data(column, colIdx, rowElem)
@@ -180,7 +180,8 @@ class Table_Buddy extends HTMLElement
     await this.Update_Data(is_page_update);
 
     const columns = this.Get_Columns();
-    this.Update_Render_Header_Row(columns);
+    //this.Update_Render_Header_Row(columns);
+    this.Render_Header_Row(columns);
     await this.Update_Render_Body_Rows(columns, this.rows);
 
     this.dispatchEvent(this.updateEvent);
@@ -349,37 +350,41 @@ class Table_Buddy extends HTMLElement
     rowElem.row_data = row_data;
     for (let colIdx = 0; colIdx < columns.length; colIdx++)
     {
-      const column = columns[colIdx];
-      const cellData = this.Get_Cell_Data(column, row_data, colIdx, rowElem, row_idx);
-
-      const cellElem = this.Render_Cell(column, cellData);
-
-      rowElem.append(cellElem);
+      const cell_elem = this.Render_Cell(columns, row_data, colIdx, rowElem, row_idx);
+      rowElem.append(cell_elem);
     }
 
     return rowElem;
   }
 
-  Render_Cell(column, cellData)
+  Render_Cell(columns, row_data, colIdx, rowElem, row_idx)
   {
-    const cellElem = document.createElement("td");
+    const column = columns[colIdx];
+    const cell_elem = document.createElement("td");
     if (column.style)
     {
-      cellElem.style = column.style;
+      cell_elem.style = column.style;
     }
-    Table_Buddy.Render_As_Type(column, cellElem, cellData);
 
-    return cellElem;
+    const cell_child_elems = this.Get_Cell_Data(column, row_data, colIdx, rowElem, row_idx, cell_elem);
+    Table_Buddy.Render_As_Type(column, cell_elem, cell_child_elems);
+
+    return cell_elem;
   }
 
   Render_Footer_Cells(parentElem)
   {
   }
 
-  static Render_As_Type(column, dstElem, data)
+  static async Render_As_Type(column, dstElem, data)
   {
     if (data)
     {
+      if (data.constructor.name == "Promise")
+      {
+        data = await data;
+      }
+
       const render_as = column?.renderAs || column?.render_as;
       if (render_as == "text")
       {
@@ -524,6 +529,7 @@ class Column_Field
     this.style = null; // eg "css-class-red"
     this.title = null; // eg "Customer Name"
     this.field_fn = null;
+    this.title_fn = null;
     this.renderAs = null; // text, html, date, url
   }
 }
@@ -531,12 +537,12 @@ Table_Buddy.Column_Field = Column_Field;
 
 class Column_Select
 {
-  constructor(id_field_name)
+  constructor(id_field_name, style)
   {
     this.id_field_name = id_field_name;
     this.selected_ids = [];
     this.width = null;
-    this.style = null;
+    this.style = style;
     this.title_fn = this.Render_Header_Select;
     this.field_fn = this.Render_Select;
 
@@ -601,10 +607,10 @@ Table_Buddy.Column_Select = Column_Select;
 
 class Column_No
 {
-  constructor()
+  constructor(style)
   {
     this.width = null;
-    this.style = null;
+    this.style = style;
     this.title = "#";
     this.field_fn = this.Render_No;
   }

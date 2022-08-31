@@ -11,7 +11,7 @@ class Table_Buddy extends HTMLElement
     this.ds = null;
     this.rows = null;
     this.order_by_code = null;
-    this.filters = null;
+    this.filters = [];
     this.page_size = 0;
     this.page_start = 0;
     this.curr_page = 0;

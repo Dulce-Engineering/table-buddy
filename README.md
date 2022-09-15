@@ -59,6 +59,40 @@ to read customer data from a backend API (Sales_Customers.Get_All). Additional d
 
 ```
 
+## class Table_Buddy
+
+## class Table_Buddy.Column_Field
+
+## class Table_Buddy.Column_Select
+
+## class Table_Buddy.Column_No
+
+## class Datasource
+
+### Get_Columns()
+return column definitions
+
+### async Update_Data(filter_by, sort_by)
+update data
+
+### Get_Data_Length(filter_by, sort_by)
+return length of data
+
+### Get_Page_Data(filter_by, sort_by, limit, offset)
+return a page's worth of data
+
+### Get_Row_Data(row_id)
+return a single row of data
+
+### Get_Cell_Data(col_id, customer)
+return a cell's worth of data
+
+## class Datasource.Server_Paging
+
+## class Datasource.Client_Paging
+
+## class Datasource.Memory
+
 ## To Do
 - Show/Hide columns
 - Set column positions

@@ -19,6 +19,7 @@ class Table_Buddy extends HTMLElement
     this.item_count = 0;
     this.show_busy = false;
     this.columns = null;
+    this.column_status = null;
 
     this.Set_Page_Size = this.Set_Page_Size.bind(this);
     this.Goto_Page = this.Goto_Page.bind(this);
@@ -61,6 +62,13 @@ class Table_Buddy extends HTMLElement
     this.Set_Datasource(ds);
   }
   
+  set columns_status(status)
+  {
+    this.column_status = status;
+    this.columns = null;
+    this.Update_Render(false);
+  }
+
   async Set_Datasource(ds)
   {
     this.ds = ds;
@@ -121,6 +129,15 @@ class Table_Buddy extends HTMLElement
       let user_columns = this.ds.Get_Columns();
       for (const user_column of user_columns)
       {
+        let visible = true;
+        if (this.column_status && user_column.id)
+        {
+          const col_status = this.column_status.find(c => c.id == user_column.id);
+          visible = col_status!=null && col_status!=undefined ? col_status.visible: visible;
+        }
+
+        if (visible)
+        {
         let column = user_column;
         if (!column.constructor.name.startsWith("Column_"))
         {
@@ -131,6 +148,7 @@ class Table_Buddy extends HTMLElement
         column.ds = this.ds;
         column.table_buddy = this;
         this.columns.push(column);
+        }
       }
     }
 

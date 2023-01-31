@@ -33,6 +33,7 @@ class Datasource
   }
 }
 
+// must implement Get_Data_Length, Get_Page_Data
 class Server_Paging extends Datasource
 {
   Get_Row_Data(row_data)

@@ -11,7 +11,8 @@ class Table_Buddy extends HTMLElement
     this.ds = null;
     this.rows = null;
     this.order_by_code = null;
-    this.filters = [];
+    //this.filters = [];
+    this.filters = null;
     this.page_size = 0;
     this.page_start = 0;
     this.curr_page = 0;
@@ -36,16 +37,6 @@ class Table_Buddy extends HTMLElement
   connectedCallback()
   {
     this.Render();
-  }
-
-  disconnectedCallback()
-  {
-    //console.log("Table_Buddy.disconnectedCallback()");
-  }
-
-  adoptedCallback()
-  {
-
   }
 
   static observedAttributes = ["style-src"];
@@ -87,7 +78,7 @@ class Table_Buddy extends HTMLElement
     {
       cell_child_elems = rowData[column.field_name];
     }
-    if (column.field_fn)
+    else if (column.field_fn)
     {
       cell_child_elems = column.field_fn(rowData, row_idx, cell_elem);
     }
@@ -310,6 +301,8 @@ class Table_Buddy extends HTMLElement
   Render_Header_Row(columns)
   {
     this.headerRowElem.replaceChildren();
+    if (columns)
+    {
     for (let i = 0; i < columns.length; i++)
     {
       const column = columns[i];
@@ -326,6 +319,7 @@ class Table_Buddy extends HTMLElement
       this.headerRowElem.append(cellElem);
     }
   }
+  }
 
   Render_Header_Cell(column, idx, cellData)
   {
@@ -336,7 +330,8 @@ class Table_Buddy extends HTMLElement
       titleElem.style = column.style;
     }
     Table_Buddy.Render_As_Type(null, titleElem, cellData);
-    titleElem.id = "title_" + idx;
+
+    titleElem.id = column.id ? column.id : "title_" + idx;
 
     return titleElem;
   }
@@ -382,6 +377,10 @@ class Table_Buddy extends HTMLElement
     if (column.style)
     {
       cell_elem.style = column.style;
+    }
+    if (column.cell_class)
+    {
+      cell_elem.classList.add(column.cell_class);
     }
 
     const cell_child_elems = this.Get_Cell_Data(column, row_data, colIdx, rowElem, row_idx, cell_elem);
@@ -432,7 +431,7 @@ class Table_Buddy extends HTMLElement
           dstElem.append(elem);
         }
       }
-      else
+      else if (data)
       {
         dstElem.append(data);
       }
@@ -450,12 +449,11 @@ class Table_Buddy extends HTMLElement
         await this.ds.Update_Data(this.filters, this.order_by_code);
         this.item_count = await this.ds.Get_Data_Length(this.filters, this.order_by_code);
       }
-      if (!this.page_size)
-      {
-        this.page_size = this.item_count;
-      }
-      this.page_count = Math.ceil(this.item_count/this.page_size);
-      this.rows = await this.ds.Get_Page_Data(this.filters, this.order_by_code, this.page_size, this.page_start);
+
+      const limit = this.page_size ? this.page_size: this.item_count;
+
+      this.page_count = Math.ceil(this.item_count/limit);
+      this.rows = await this.ds.Get_Page_Data(this.filters, this.order_by_code, limit, this.page_start);
     }
     else
     {
@@ -639,5 +637,26 @@ class Column_No
   }
 }
 Table_Buddy.Column_No = Column_No;
+
+class Column_Sample
+{
+  // optional
+  // return custom th element
+  Render_Header_Cell(i, cellData) {}
+}
+
+/*
+Column fields
+{
+  id: optional string assigned to th.id default is title_(idx),
+  style: optional string assigned to th.style,
+  title
+  title_fn
+  field_name
+  field_fn
+}
+*/
+
+Utils.Register_Element(Table_Buddy);
 
 export default Table_Buddy;

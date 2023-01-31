@@ -5,6 +5,15 @@ class Utils
     return Utils.appendStr(params, paramName + "=" + paramValue, "&");
   }
 
+  static Register_Element(elem_class)
+  {
+    const comp_class = customElements.get(elem_class.tname);
+    if (comp_class == undefined)
+    {
+      customElements.define(elem_class.tname, elem_class);
+    }
+  }
+
   static Add_Param(url, param_name, param_Value)
   {
     if (param_Value)
@@ -280,6 +289,16 @@ class Utils
     return str?.startsWith("{") || str?.startsWith("[");
   }
   
+  static Set_Id_Shortcuts(src_elem, dest_elem)
+  {
+    const elems = src_elem.querySelectorAll("[id]");
+    for (const elem of elems)
+    {
+      const id = elem.id;
+      dest_elem[id] = elem;
+    }
+  }
+
   // cast =========================================================================================
 
   static toEmptyStr(value)

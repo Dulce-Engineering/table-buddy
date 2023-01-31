@@ -2,37 +2,33 @@ import Utils from "./Utils.mjs";
 
 class Paging_Bar extends HTMLElement 
 {
+  static tname = "paging-bar";
+
   constructor() 
   {
     super();
 
-    this.table_id = null;
     this.table = null;
 
     this.Render_Update = this.Render_Update.bind(this);
+    this.On_Change_Page_Size = this.On_Change_Page_Size.bind(this);
 
     this.attachShadow({mode: 'open'});
   }
 
   connectedCallback()
   {
-    const rootElem = this.Render();
-    this.shadowRoot.append(rootElem);
+    this.Render();
+    Utils.Set_Id_Shortcuts(this.shadowRoot, this);
 
-    if (this.table_id)
+    const table_id = this.getAttribute("table-id");
+    if (table_id)
     {
-      const elem = document.getElementById(this.table_id);
+      const elem = document.getElementById(table_id);
       this.Set_Src_Table(elem);
     }
-  }
 
-  static observedAttributes = ['table-id'];
-  attributeChangedCallback(name, old_value, new_value) 
-  {
-    if (name == "table-id")
-    {
-      this.table_id = new_value;
-    }
+    this.Load();
   }
 
   Set_Src_Table(elem)
@@ -42,7 +38,7 @@ class Paging_Bar extends HTMLElement
     {
       const select_elem = this.shadowRoot.getElementById("page_size_sel");
       select_elem.value = this.table.page_size;
-      select_elem.onchange = (event) => this.table.Set_Page_Size(event.target.value);
+      select_elem.onchange = this.On_Change_Page_Size;
   
       this.shadowRoot.getElementById("prev_btn").onclick = this.table.Goto_Prev_Page;
       this.shadowRoot.getElementById("first_btn").onclick = this.table.Goto_First_Page;
@@ -55,22 +51,65 @@ class Paging_Bar extends HTMLElement
     }
   }
 
-  Render_Update()
+  Save()
   {
-    const paging_span = this.shadowRoot.getElementById("paging_span");
-
-    if (this.table)
+    if (this.id)
     {
-      paging_span.innerText = 
-        this.table.item_count + " Items, " +
-        "Page " + (this.table.curr_page + 1) + " of " + this.table.page_count;
+      const value = {page_size_sel_value: this.page_size_sel.value};
+      const value_str = JSON.stringify(value);
+      localStorage.setItem(this.id, value_str);
     }
   }
 
-  Render()
+  Load()
   {
-    const html = 
-      `<style>
+    if (this.id)
+    {
+      const store_str = localStorage.getItem(this.id);
+      if (store_str)
+      {
+        const store = JSON.parse(store_str);
+        this.page_size_sel.value = store.page_size_sel_value;
+        if (this.table)
+        {
+          this.table.Set_Page_Size(store.page_size_sel_value);
+        }
+      }
+      else
+      {
+        this.page_size_sel.value = 10;
+        if (this.table)
+        {
+          this.table.Set_Page_Size(this.page_size_sel.value);
+        }
+      }
+    }
+  }
+
+  On_Change_Page_Size(event)
+  {
+    this.table.Set_Page_Size(event.target.value);
+    this.Save();
+  }
+
+  // rendering ====================================================================================
+
+  Render_Update()
+  {
+    if (this.table)
+    {
+      this.paging_span.innerText = 
+        this.table.item_count + " Items, " +
+        "Page " + (this.table.curr_page + 1) + " of " + this.table.page_count;
+      
+      //this.page_size_sel.value = this.table.page_size;
+    }
+  }
+
+  Render_Styles()
+  {
+    let elem = null;
+    let style_html = `
         :host
         {
           padding: 5px;
@@ -110,26 +149,56 @@ class Paging_Bar extends HTMLElement
         {
           font-weight: bold;
         }
-      </style>
+    `;
       
-      <span id="btn_panel">
-        <img id="first_btn" title="First Page" src="/src/images/icons8-first-24.png">
-        <img id="prev_btn" title="Previous Page" src="/src/images/icons8-previous-24.png">
-        <img id="next_btn" title="Next Page" src="/src/images/icons8-next-24.png">
-        <img id="last_btn" title="Last Page" src="/src/images/icons8-last-24.png">
-      </span>
+    if (this.hasAttribute("style-src"))
+    {
+      elem = document.createElement("link");
+      elem.rel = "stylesheet";
+      elem.href = this.getAttribute("style-src");
+    }
+    else
+    {
+      elem = document.createElement("style");
+      elem.innerHTML = style_html;
+    }
+
+    return elem;
+  }
+
+  Render()
+  {
+    const styles = this.Render_Styles();
+    const html = `
       Rows per page
       <select id="page_size_sel">
+        <option value="5">5</option>
         <option value="10">10</option>
         <option value="20">20</option>
         <option value="30">30</option>
         <option value="40">40</option>
         <option value="50">50</option>
       </select>
-      <span id="paging_span"></span>`;
-    const doc = Utils.toDocument(html);
+      
+      <span id="btn_panel">
+        <img id="first_btn" title="First Page" src="/images/first_page.svg">
+        <img id="prev_btn" title="Previous Page" src="/images/prev_page.svg">
+        <img id="next_btn" title="Next Page" src="/images/next_page.svg">
+        <img id="last_btn" title="Last Page" src="/images/last_page.svg">
+      </span>
+      
+      <span id="paging_span"></span>
+    `;
 
-    return doc;
+    if (this.hasChildNodes)
+    {
+      this.shadowRoot.append(styles, ...this.children);
+    }
+    else
+    {
+    const doc = Utils.toDocument(html);
+      this.shadowRoot.append(styles, doc);
+    }
   }
 }
 

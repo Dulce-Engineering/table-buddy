@@ -30,7 +30,6 @@ class Table_Buddy extends HTMLElement
     this.Goto_Next_Page = this.Goto_Next_Page.bind(this);
     this.Row_Click = this.Row_Click.bind(this);
 
-    this.attachShadow({mode: 'open'});
     this.updateEvent = new Event("update");
   }
 
@@ -53,6 +52,11 @@ class Table_Buddy extends HTMLElement
     this.Set_Datasource(ds);
   }
   
+  get datasource()
+  {
+    return this.ds;
+  }
+
   set columns_status(status)
   {
     this.column_status = status;
@@ -150,20 +154,10 @@ class Table_Buddy extends HTMLElement
 
   Show_Busy()
   {
-    /*if (this.show_busy)
-    {
-      const overlayElem = this.shadowRoot.getElementById("tableOverlay");
-      overlayElem.style.display = "flex";
-    }*/
   }
 
   Hide_Busy()
   {
-    /*if (this.show_busy)
-    {
-      const overlayElem = this.shadowRoot.getElementById("tableOverlay");
-      overlayElem.style.display = "none";
-    }*/
   }
 
   Render_Msg(msg)
@@ -219,80 +213,22 @@ class Table_Buddy extends HTMLElement
 
   Render()
   {
-    let style = `
-      <style>
-        :host
-        {
-          display: inline-block;
-        }
-        #tableElem
-        {
-          width: 100%;
-        }
-        #tableContainer
-        {
-          position: relative;
-        }
-        #tableOverlay
-        {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          color: #000;
-          background-color: #dddc;
-          border-radius: 4px;
-          display: none;
-          justify-content: center;
-          align-items: center;
-          z-index: 1;
-        }
-        #tableOverlayGear 
-        {
-          animation: rotate 2s linear infinite;
-          transform-origin: center center;
-        }
-        @keyframes rotate { 100% { transform:rotate(360deg); } }
-        .disabled-row {
-          opacity: .8;
-          background: #cccccc;
-          pointer-events: none;
-        }
-      </style>`;
-    if (this.style_src)
-    {
-      style = "<link rel=\"stylesheet\" href=\"" + this.style_src + "\"></link>";
-    }
     const html = `
-      ${style}
-
       <div id="tableContainer">
-        <!--div id="tableOverlay">
-          <svg width="50px" height="50px" viewBox="0 0 600 600">
-          <path id="tableOverlayGear"
-            stroke="black" fill="#444" width="20%" height="20%"
-            d="M491.103,215.312c-8.841-24.651-22.222-47.73-39.651-67.984l41.965-73.324L368.537,2.532l-41.965,73.324    
-            c-26.307-4.777-52.972-4.618-78.703,0.245L205.384,3.135L81.035,75.571l42.485,72.966c-8.394,9.89-16.105,20.572-22.807,32.28    
-            c-6.683,11.677-11.989,23.736-16.282,36.013L0,217.154l0.529,143.909l84.45-0.318c8.822,24.68,22.194,47.711,39.636,67.979    
-            l-41.965,73.32l124.878,71.473l41.965-73.324c26.292,4.768,52.954,4.648,78.672-0.264l42.501,72.979l124.349-72.434l-42.487-72.93    
-            c8.394-9.932,16.138-20.633,22.821-32.311c6.701-11.707,11.989-23.779,16.298-36.043l84.4-0.303l-0.529-143.909L491.103,215.312z     
-            M413.733,359.967c-39.734,69.426-128.229,93.496-197.655,53.762s-93.495-128.23-53.761-197.655    
-            c39.734-69.425,128.229-93.495,197.654-53.761C429.397,202.047,453.468,290.542,413.733,359.967z"/>
-          </svg>
-        </div-->
         <table id="tableElem">
-          <thead><tr id="headerRowElem"></tr></thead>
-          <tbody id="bodyElem">
+          <thead><tr cid="headerRowElem"></tr></thead>
+          <tbody cid="bodyElem">
           </tbody>
-          <tfoot><tr id="footerRowElem"></tr></tfoot>
+          <tfoot><tr cid="footerRowElem"></tr></tfoot>
         </table>
       </div>
       `;
     const tableElem = Utils.toDocument(html);
-    this.shadowRoot.append(tableElem);
+    this.append(tableElem);
 
-    this.headerRowElem = this.shadowRoot.querySelector("#headerRowElem");
-    this.bodyElem = this.shadowRoot.querySelector("#bodyElem");
-    this.footerRowElem = this.shadowRoot.querySelector("#footerRowElem");
+    this.headerRowElem = this.querySelector("[cid=headerRowElem]");
+    this.bodyElem = this.querySelector("[cid=bodyElem]");
+    this.footerRowElem = this.querySelector("[cid=footerRowElem]");
     this.Render_Msg("Please Wait...");
 
     return tableElem;
@@ -303,22 +239,22 @@ class Table_Buddy extends HTMLElement
     this.headerRowElem.replaceChildren();
     if (columns)
     {
-    for (let i = 0; i < columns.length; i++)
-    {
-      const column = columns[i];
-      const cellData = this.Get_Header_Cell_Data(column, i, this.headerRowElem);
-      let cellElem;
-      if (column.Render_Header_Cell)
+      for (let i = 0; i < columns.length; i++)
       {
-        cellElem = column.Render_Header_Cell(i, cellData);
+        const column = columns[i];
+        const cellData = this.Get_Header_Cell_Data(column, i, this.headerRowElem);
+        let cellElem;
+        if (column.Render_Header_Cell)
+        {
+          cellElem = column.Render_Header_Cell(i, cellData);
+        }
+        else
+        {
+          cellElem = this.Render_Header_Cell(column, i, cellData);
+        }
+        this.headerRowElem.append(cellElem);
       }
-      else
-      {
-        cellElem = this.Render_Header_Cell(column, i, cellData);
-      }
-      this.headerRowElem.append(cellElem);
     }
-  }
   }
 
   Render_Header_Cell(column, idx, cellData)

@@ -1,5 +1,6 @@
 <html>
   <head>
+    <link href="sample_styles.css" rel="stylesheet" type="text/css">
     <style>
       body
       {
@@ -25,8 +26,6 @@
       import Table_Buddy from "./src/Table_Buddy.mjs";
       import Datasource from "./src/Datasource.mjs";
       import Utils from "./src/Utils.mjs";
-
-      customElements.define('table-buddy', Table_Buddy);
 
       class Customer_Ds extends Datasource.Client_Paging
       {

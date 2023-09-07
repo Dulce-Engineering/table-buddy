@@ -23,8 +23,9 @@ class Datasource
   }
 
   // return a single row of data
-  Get_Row_Data(row_id)
+  Get_Row_Data(row)
   {
+    return row;
   }
 
   // return a cell's worth of data
@@ -36,10 +37,6 @@ class Datasource
 // must implement Get_Data_Length, Get_Page_Data
 class Server_Paging extends Datasource
 {
-  Get_Row_Data(row_data)
-  {
-    return row_data;
-  }
 }
 Datasource.Server_Paging = Server_Paging;
 
@@ -87,11 +84,6 @@ class Memory
       res = this.data.slice(offset, offset+limit);
     }
     return res;
-  }
-
-  Get_Row_Data(row_data)
-  {
-    return row_data;
   }
 }
 Datasource.Memory = Memory;

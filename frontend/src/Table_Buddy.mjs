@@ -41,9 +41,9 @@ class Table_Buddy extends HTMLElement
   static observedAttributes = ["style-src"];
   attributeChangedCallback(attrName, oldValue, newValue)
   {
-    if (attrName == "style-src")
+    if (attrName == "page-size")
     {
-      this.style_src = newValue;
+      this.Set_Page_Size(newValue);
     }
   }
   
@@ -74,7 +74,7 @@ class Table_Buddy extends HTMLElement
     await this.Update_Render();
   }
 
-  Get_Cell_Data(column, rowData, colIdx, rowElem, row_idx, cell_elem)
+  async Get_Cell_Data(column, rowData, colIdx, rowElem, row_idx, cell_elem)
   {
     let cell_child_elems;
 
@@ -84,7 +84,7 @@ class Table_Buddy extends HTMLElement
     }
     else if (column.field_fn)
     {
-      cell_child_elems = column.field_fn(rowData, row_idx, cell_elem);
+      cell_child_elems = await column.field_fn(rowData, row_idx, cell_elem);
     }
     else if (this.ds.Get_Cell_Data)
     {
@@ -299,17 +299,18 @@ class Table_Buddy extends HTMLElement
     rowElem.row_data = row_data;
     for (let colIdx = 0; colIdx < columns.length; colIdx++)
     {
-      const cell_elem = this.Render_Cell(columns, row_data, colIdx, rowElem, row_idx);
+      const cell_elem = document.createElement("td");
       rowElem.append(cell_elem);
+
+      this.Render_Cell(columns, row_data, colIdx, rowElem, row_idx, cell_elem);
     }
 
     return rowElem;
   }
 
-  Render_Cell(columns, row_data, colIdx, rowElem, row_idx)
+  async Render_Cell(columns, row_data, colIdx, rowElem, row_idx, cell_elem)
   {
     const column = columns[colIdx];
-    const cell_elem = document.createElement("td");
     if (column.style)
     {
       cell_elem.style = column.style;
@@ -319,10 +320,8 @@ class Table_Buddy extends HTMLElement
       cell_elem.classList.add(column.cell_class);
     }
 
-    const cell_child_elems = this.Get_Cell_Data(column, row_data, colIdx, rowElem, row_idx, cell_elem);
-    Table_Buddy.Render_As_Type(column, cell_elem, cell_child_elems);
-
-    return cell_elem;
+    const content = await this.Get_Cell_Data(column, row_data, colIdx, rowElem, row_idx, cell_elem);
+    Table_Buddy.Render_As_Type(column, cell_elem, content);
   }
 
   Render_Footer_Cells(parentElem)
@@ -351,6 +350,11 @@ class Table_Buddy extends HTMLElement
       {
         const date = new Date(data);
         dstElem.append(date.toLocaleDateString());
+      }
+      else if (render_as == "datetime")
+      {
+        const date = new Date(data);
+        dstElem.append(date.toLocaleString());
       }
       else if (render_as == "url")
       {
@@ -580,18 +584,6 @@ class Column_Sample
   // return custom th element
   Render_Header_Cell(i, cellData) {}
 }
-
-/*
-Column fields
-{
-  id: optional string assigned to th.id default is title_(idx),
-  style: optional string assigned to th.style,
-  title
-  title_fn
-  field_name
-  field_fn
-}
-*/
 
 Utils.Register_Element(Table_Buddy);
 

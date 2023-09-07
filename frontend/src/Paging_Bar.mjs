@@ -12,14 +12,12 @@ class Paging_Bar extends HTMLElement
 
     this.Render_Update = this.Render_Update.bind(this);
     this.On_Change_Page_Size = this.On_Change_Page_Size.bind(this);
-
-    this.attachShadow({mode: 'open'});
   }
 
   connectedCallback()
   {
     this.Render();
-    Utils.Set_Id_Shortcuts(this.shadowRoot, this);
+    Utils.Set_Id_Shortcuts(this, this);
 
     const table_id = this.getAttribute("table-id");
     if (table_id)
@@ -36,14 +34,13 @@ class Paging_Bar extends HTMLElement
     this.table = elem;
     if (this.table)
     {
-      const select_elem = this.shadowRoot.getElementById("page_size_sel");
-      select_elem.value = this.table.page_size;
-      select_elem.onchange = this.On_Change_Page_Size;
+      this.page_size_sel.value = this.table.page_size;
+      this.page_size_sel.onchange = this.On_Change_Page_Size;
   
-      this.shadowRoot.getElementById("prev_btn").onclick = this.table.Goto_Prev_Page;
-      this.shadowRoot.getElementById("first_btn").onclick = this.table.Goto_First_Page;
-      this.shadowRoot.getElementById("last_btn").onclick = this.table.Goto_Last_Page;
-      this.shadowRoot.getElementById("next_btn").onclick = this.table.Goto_Next_Page;
+      this.prev_btn.onclick = this.table.Goto_Prev_Page;
+      this.first_btn.onclick = this.table.Goto_First_Page;
+      this.last_btn.onclick = this.table.Goto_Last_Page;
+      this.next_btn.onclick = this.table.Goto_Next_Page;
   
       this.Render_Update();
   
@@ -106,70 +103,10 @@ class Paging_Bar extends HTMLElement
     }
   }
 
-  Render_Styles()
-  {
-    let elem = null;
-    let style_html = `
-        :host
-        {
-          padding: 5px;
-          display: inline-block;
-          font-size: 11px;
-        }
-        img
-        {
-          margin: 0;
-          padding: 0;
-          cursor: pointer;
-          vertical-align: middle;
-        }
-        img:hover
-        {
-          background: #eee;
-        }
-        #btn_panel
-        {
-          margin: 0 20px 0 0;
-          padding: 0;
-        }
-        #page_size_sel
-        {
-          font-size: 12px;
-          border: 2px solid #000;
-          vertical-align: middle;
-          cursor: pointer;
-          margin-right: 20px;
-          border-radius: 3px;
-        }
-        .xcurrPage
-        {
-          background: #eee;
-        }
-        #paging_span
-        {
-          font-weight: bold;
-        }
-    `;
-      
-    if (this.hasAttribute("style-src"))
-    {
-      elem = document.createElement("link");
-      elem.rel = "stylesheet";
-      elem.href = this.getAttribute("style-src");
-    }
-    else
-    {
-      elem = document.createElement("style");
-      elem.innerHTML = style_html;
-    }
-
-    return elem;
-  }
-
   Render()
   {
-    const styles = this.Render_Styles();
     const html = `
+      <span class="page-size">
       Rows per page
       <select id="page_size_sel">
         <option value="5">5</option>
@@ -179,27 +116,22 @@ class Paging_Bar extends HTMLElement
         <option value="40">40</option>
         <option value="50">50</option>
       </select>
+      </span>
       
       <span id="btn_panel">
-        <img id="first_btn" title="First Page" src="/images/first_page.svg">
-        <img id="prev_btn" title="Previous Page" src="/images/prev_page.svg">
-        <img id="next_btn" title="Next Page" src="/images/next_page.svg">
-        <img id="last_btn" title="Last Page" src="/images/last_page.svg">
+        <button id="first_btn"><span class="btn-label">First Page</span></button>
+        <button id="prev_btn"><span class="btn-label">Previous Page</span></button>
+        <button id="next_btn"><span class="btn-label">Next Page</span></button>
+        <button id="last_btn"><span class="btn-label">Last Page</span></button>
       </span>
       
       <span id="paging_span"></span>
     `;
 
-    if (this.hasChildNodes)
-    {
-      this.shadowRoot.append(styles, ...this.children);
-    }
-    else
-    {
-    const doc = Utils.toDocument(html);
-      this.shadowRoot.append(styles, doc);
-    }
+    this.innerHTML = html;
   }
 }
+
+Utils.Register_Element(Paging_Bar);
 
 export default Paging_Bar;
